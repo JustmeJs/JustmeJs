@@ -17,6 +17,7 @@ namespace KleinesSpiel.Scripts.Common
         private float _dash;
         private float _trail;
         private bool _dead;
+        private bool _directional;
         private string _state = "idle";
         public string GetAnimationState() => _state;
 
@@ -25,7 +26,17 @@ namespace KleinesSpiel.Scripts.Common
             _sprite = GetNodeOrNull<AnimatedSprite2D>("Sprite");
             if (_sprite == null) return;
             _spriteScale = _sprite.Scale;
-            _sprite.Play("idle");
+            _directional = _sprite.SpriteFrames.HasAnimation("idle_down");
+            _sprite.Play(ResolveAnimation("idle"));
+        }
+
+        private string ResolveAnimation(string state)
+        {
+            string direction = Mathf.Abs(_facing.X) > Mathf.Abs(_facing.Y)
+                ? (_facing.X < 0 ? "left" : "right") : (_facing.Y < 0 ? "up" : "down");
+            string directionalName = $"{state}_{direction}";
+            return _directional && _sprite.SpriteFrames.HasAnimation(directionalName)
+                ? directionalName : state;
         }
 
         public void SetMotion(Vector2 velocity, Vector2 facing)
@@ -42,7 +53,7 @@ namespace KleinesSpiel.Scripts.Common
             if (direction != Vector2.Zero) _facing = direction;
             if (_sprite != null && _hurt <= 0f && _dash <= 0f)
             {
-                _sprite.Play("attack");
+                _sprite.Play(ResolveAnimation("attack"));
                 _sprite.SetFrameAndProgress(0, 0);
             }
         }
@@ -66,7 +77,7 @@ namespace KleinesSpiel.Scripts.Common
             _state = "death";
             Visible = true;
             ProcessMode = ProcessModeEnum.Always;
-            _sprite?.Play("death");
+            _sprite?.Play(ResolveAnimation("death"));
             var effect = Effects.BurstEffect.Spawn(this, GlobalPosition, Accent, 28, 0.5f);
             if (effect != null) effect.ProcessMode = ProcessModeEnum.Always;
         }
@@ -81,12 +92,14 @@ namespace KleinesSpiel.Scripts.Common
             _dash = Mathf.Max(0, _dash - dt);
             string state = _dead ? "death" : _hurt > 0 ? "hurt" : _dash > 0 ? "dash"
                 : _attack > 0 ? "attack" : _motion.LengthSquared() > 25 ? "walk" : "idle";
-            if (_state != state)
+            string animation = ResolveAnimation(state);
+            if (_state != state || _sprite.Animation.ToString() != animation)
             {
                 _state = state;
-                _sprite.Play(state);
+                _sprite.Play(animation);
             }
-            if (Mathf.Abs(_facing.X) > 0.1f) _sprite.FlipH = _facing.X < 0;
+            if (_directional) _sprite.FlipH = false;
+            else if (Mathf.Abs(_facing.X) > 0.1f) _sprite.FlipH = _facing.X < 0;
             float bob = _dead ? 0 : Floating ? Mathf.Sin(_time * 4) * 2
                 : state == "walk" ? -Mathf.Abs(Mathf.Sin(_time * 14)) * 1.5f
                 : Mathf.Sin(_time * 3) * 0.4f;

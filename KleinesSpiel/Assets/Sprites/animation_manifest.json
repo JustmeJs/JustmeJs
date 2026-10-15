@@ -91,5 +91,15 @@
       "fps": 22,
       "loop": true
     }
-  }
+  },
+  "hero_replacement": "res://Assets/Sprites/hero_mage_manifest.json",
+  "active_character_rows": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ]
 }

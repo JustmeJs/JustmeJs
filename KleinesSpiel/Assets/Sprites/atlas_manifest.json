@@ -16,7 +16,9 @@
         313.5,
         313.5
       ],
-      "resource": "res://Resources/Art/hero.tres"
+      "resource": null,
+      "legacy": true,
+      "replacement_resource": "res://Resources/Art/hero.tres"
     },
     {
       "name": "imp",

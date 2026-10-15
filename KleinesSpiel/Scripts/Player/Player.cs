@@ -32,6 +32,12 @@ namespace KleinesSpiel.Scripts.Player
 		[Export] public float ProjectileSpeed = 300f;
 		[Export] public float BaseDamage = 1f;
 
+		[ExportGroup("Zauberstab: Projektil-Ursprung")]
+		[Export] public Vector2 CastOffsetDown = new(-0.56f, 13.23f);
+		[Export] public Vector2 CastOffsetUp = new(-5.49f, -16.86f);
+		[Export] public Vector2 CastOffsetLeft = new(-17.61f, 0.96f);
+		[Export] public Vector2 CastOffsetRight = new(19.4f, -0.04f);
+
 		[ExportGroup("Dash")]
 		[Export] public float DashDistance = 48f; // kurzer Ruck nach vorne
 		[Export] public float DashDurationSeconds = 0.15f; // wie lange der Dash dauert
@@ -156,8 +162,7 @@ namespace KleinesSpiel.Scripts.Player
 			else if (Input.IsActionPressed("aim_right"))
 				_facingDirection = Direction4.Right;
 
-			// Falls spaeter ein Sprite mit Blickrichtung existiert,
-			// kann hier die Animation/Flip aktualisiert werden.
+			// ActorAnimator selects the matching directional staff animation.
 		}
 
 		private bool IsAimingHeld()
@@ -207,15 +212,16 @@ namespace KleinesSpiel.Scripts.Player
 				return;
 			}
 
+			Vector2 direction = DirectionToVector(_facingDirection);
+			Vector2 origin = GetCastOrigin();
 			var projectileInstance = ProjectileScene.Instantiate<Node2D>();
 			GetParent().AddChild(projectileInstance);
-			projectileInstance.GlobalPosition = GlobalPosition;
+			projectileInstance.GlobalPosition = origin;
 
 			if (projectileInstance is Projectiles.Projectile projectile)
 			{
-				Vector2 direction = DirectionToVector(_facingDirection);
 				_animator?.PlayAttack(direction);
-				Effects.BurstEffect.Spawn(this, GlobalPosition + direction * 14, new Color(0.3f, 0.9f, 1), 9, 0.14f);
+				Effects.BurstEffect.Spawn(this, origin, new Color(0.3f, 0.9f, 1), 9, 0.14f);
 				float finalDamage = BaseDamage * _damageMultiplier;
 				if (_hasPiercingUpgrade)
 				{
@@ -223,6 +229,18 @@ namespace KleinesSpiel.Scripts.Player
 				}
 				projectile.Launch(direction, ProjectileSpeed, finalDamage);
 			}
+		}
+
+		public Vector2 GetCastOrigin()
+		{
+			Vector2 offset = _facingDirection switch
+			{
+				Direction4.Up => CastOffsetUp,
+				Direction4.Left => CastOffsetLeft,
+				Direction4.Right => CastOffsetRight,
+				_ => CastOffsetDown
+			};
+			return ToGlobal(offset);
 		}
 
 		// -----------------------------------------------------------------

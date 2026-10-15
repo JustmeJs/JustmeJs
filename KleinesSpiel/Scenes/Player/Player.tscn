@@ -23,9 +23,9 @@ script = ExtResource("animator")
 
 [node name="Sprite" type="AnimatedSprite2D" parent="Visual"]
 sprite_frames = ExtResource("art")
-animation = &"idle"
-autoplay = "idle"
-scale = Vector2(0.22916667, 0.22916667)
+animation = &"idle_down"
+autoplay = "idle_down"
+scale = Vector2(0.18181818, 0.18181818)
 
 [node name="Placeholder" type="ColorRect" parent="Visual"]
 visible = false

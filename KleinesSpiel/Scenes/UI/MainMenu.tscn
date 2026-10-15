@@ -39,7 +39,7 @@ theme_override_constants/separation = 24
 [node name="HeroArt" type="TextureRect" parent="CenterContainer/VBoxContainer"]
 script = ExtResource("hero_motion")
 layout_mode = 2
-custom_minimum_size = Vector2(112, 112)
+custom_minimum_size = Vector2(160, 160)
 texture = ExtResource("hero")
 expand_mode = 1
 stretch_mode = 5

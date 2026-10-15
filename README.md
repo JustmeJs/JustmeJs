@@ -12,13 +12,19 @@ El ZIP también incluye las entradas de carpetas que necesita el importador de p
 
 Controles: WASD para moverse, flechas para disparar, espacio para dash y Escape para pausar.
 
+## Vara mágica y disparos direccionales
+
+El héroe usa una vara mágica, con poses propias al lanzar hacia arriba, abajo, izquierda y derecha. Los proyectiles salen de la punta de la vara y la animación mantiene la dirección de tiro aunque el personaje se mueva hacia otro lado.
+
+![Disparo con vara en cuatro direcciones](KleinesSpiel/Documentation/mage_casting_preview.gif)
+
 ## Vista previa
 
 ![Vista previa de las animaciones](KleinesSpiel/Documentation/animations_preview.gif)
 
 La galería muestra reposo, movimiento, ataques, impactos, dash y derrota para el héroe y los enemigos/jefes. Los objetos, proyectiles, puertas, antorchas e interfaz también tienen efectos animados.
 
-Validado con Godot 4.3 .NET: compilación sin errores y 180 comprobaciones de animación superadas.
+Validado con Godot 4.3 .NET: compilación sin errores y 180 comprobaciones de animación y 72 comprobaciones del mago superadas.
 
 [Documentación de los assets y validación](KleinesSpiel/README_ASSETS.md)
 
