@@ -13,6 +13,7 @@ namespace KleinesSpiel.Scripts.UI
 
 		public override void _Ready()
 		{
+			MenuMotion.Configure(this);
 			ProcessMode = ProcessModeEnum.Always;
 
 			var continueButton = GetNode<Button>("CenterContainer/VBoxContainer/ContinueButton");

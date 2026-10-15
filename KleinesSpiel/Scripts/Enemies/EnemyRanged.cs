@@ -49,6 +49,8 @@ namespace KleinesSpiel.Scripts.Enemies
 			if (ProjectileScene == null)
 				return;
 
+			AnimateAttack(direction);
+
 			var projectileInstance = ProjectileScene.Instantiate<Node2D>();
 			GetTree().CurrentScene.AddChild(projectileInstance);
 			projectileInstance.GlobalPosition = GlobalPosition;

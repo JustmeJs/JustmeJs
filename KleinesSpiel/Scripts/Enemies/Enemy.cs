@@ -37,17 +37,13 @@ namespace KleinesSpiel.Scripts.Enemies
 
 		private float _contactDamageTimer;
 		private Node2D _visual;
-		private AnimatedSprite2D _animatedSprite;
-
-		// Ab welcher Geschwindigkeit gilt der Gegner als "in Bewegung"
-		// (unterhalb davon wird die Lauf-Animation angehalten).
-		private const float AnimationMoveThreshold = 5f;
+		private Common.ActorAnimator _animator;
 
 		public override void _Ready()
 		{
 			CurrentHealth = MaxHealth;
 			_visual = GetNodeOrNull<Node2D>("Visual");
-			_animatedSprite = _visual?.GetNodeOrNull<AnimatedSprite2D>("Sprite");
+			_animator = _visual as Common.ActorAnimator;
 			Common.VisualHelper.UseSpriteIfAssigned(_visual);
 			AddToGroup("enemies");
 		}
@@ -67,47 +63,14 @@ namespace KleinesSpiel.Scripts.Enemies
 			UpdateBehavior(dt);
 			MoveAndSlide();
 			CheckContactDamage();
-			UpdateDirectionalAnimation();
+			_animator?.SetMotion(Velocity, Velocity);
 		}
 
-		// Waehlt anhand von Velocity die passende Lauf-Animation
-		// (walk_down / walk_up / walk_left) und spiegelt sie fuer "rechts"
-		// (FlipH), statt eine eigene "walk_right"-Animation zu brauchen.
-		// Setzt jede Unterklasse automatisch, solange ihr SpriteFrames-Asset
-		// die drei genannten Animationsnamen enthaelt.
-		private void UpdateDirectionalAnimation()
+		protected void AnimateAttack(Vector2 direction)
 		{
-			if (_animatedSprite == null || _animatedSprite.SpriteFrames == null)
-				return;
-
-			if (Velocity.Length() < AnimationMoveThreshold)
-			{
-				_animatedSprite.Stop();
-				return;
-			}
-
-			string animationName;
-			bool flipH = false;
-
-			if (Mathf.Abs(Velocity.X) > Mathf.Abs(Velocity.Y))
-			{
-				animationName = "walk_left";
-				flipH = Velocity.X > 0f; // "rechts" = gespiegeltes "walk_left"
-			}
-			else
-			{
-				animationName = Velocity.Y < 0f ? "walk_up" : "walk_down";
-			}
-
-			if (!_animatedSprite.SpriteFrames.HasAnimation(animationName))
-				return;
-
-			_animatedSprite.FlipH = flipH;
-
-			if (_animatedSprite.Animation != animationName || !_animatedSprite.IsPlaying())
-			{
-				_animatedSprite.Play(animationName);
-			}
+			_animator?.PlayAttack(direction);
+			Effects.BurstEffect.Spawn(this, GlobalPosition + direction * 16,
+				new Color(1, 0.45f, 0.2f), 11, 0.18f);
 		}
 
 		// Wird von den Unterklassen ueberschrieben (Verfolgen, Abstand halten, etc.)
@@ -141,6 +104,7 @@ namespace KleinesSpiel.Scripts.Enemies
 				var collision = GetSlideCollision(i);
 				if (collision.GetCollider() is Player.Player player)
 				{
+					AnimateAttack((player.GlobalPosition - GlobalPosition).Normalized());
 					player.TakeDamage(ContactDamageHalfHearts);
 					_contactDamageTimer = ContactDamageCooldownSeconds;
 
@@ -171,19 +135,23 @@ namespace KleinesSpiel.Scripts.Enemies
 
 		private void FlashHurt()
 		{
-			if (_visual == null)
-				return;
-
-			var tween = GetTree().CreateTween();
-			tween.TweenProperty(_visual, "modulate", new Color(2f, 2f, 2f, 1f), 0.03f);
-			tween.TweenProperty(_visual, "modulate", new Color(1f, 1f, 1f, 1f), 0.12f);
+			_animator?.PlayHurt();
 		}
 
 		protected virtual void Die()
 		{
+			SetPhysicsProcess(false);
+			Velocity = Vector2.Zero;
+			CollisionLayer = 0;
+			CollisionMask = 0;
+			RemoveFromGroup("enemies");
+			_animator?.PlayDeath();
 			TrySpawnHeartDrop();
 			Defeated?.Invoke(this);
-			QueueFree();
+			// The actor is harmless immediately; only its death visual remains.
+			var cleanup = CreateTween().SetPauseMode(Tween.TweenPauseMode.Process);
+			cleanup.TweenInterval(0.55f);
+			cleanup.TweenCallback(Callable.From(QueueFree));
 		}
 
 		// Wird von der HUD (Boss-Lebensbalken) benutzt, um den aktuellen

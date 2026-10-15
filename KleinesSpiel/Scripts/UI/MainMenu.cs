@@ -6,6 +6,7 @@ namespace KleinesSpiel.Scripts.UI
 	{
 		public override void _Ready()
 		{
+			MenuMotion.Configure(this);
 			var playButton = GetNode<Button>("CenterContainer/VBoxContainer/PlayButton");
 			playButton.Pressed += OnPlayPressed;
 		}

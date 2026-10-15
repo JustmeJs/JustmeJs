@@ -74,11 +74,14 @@ namespace KleinesSpiel.Scripts.Player
 		// Optionaler Kindknoten fuer die Anzeige (Sprite2D). Kann null sein,
 		// falls noch kein Sprite im Editor zugewiesen wurde.
 		private Node2D _visual;
+		private Common.ActorAnimator _animator;
+		private bool _dead;
 
 		public override void _Ready()
 		{
 			_currentHealthHalfHearts = MaxHealthHalfHearts;
 			_visual = GetNodeOrNull<Node2D>("Visual");
+			_animator = _visual as Common.ActorAnimator;
 			Common.VisualHelper.UseSpriteIfAssigned(_visual);
 			AddToGroup("player");
 		}
@@ -114,6 +117,7 @@ namespace KleinesSpiel.Scripts.Player
 			}
 
 			MoveAndSlide();
+			_animator?.SetMotion(Velocity, IsAimingHeld() ? DirectionToVector(_facingDirection) : Velocity);
 		}
 
 		// -----------------------------------------------------------------
@@ -210,6 +214,8 @@ namespace KleinesSpiel.Scripts.Player
 			if (projectileInstance is Projectiles.Projectile projectile)
 			{
 				Vector2 direction = DirectionToVector(_facingDirection);
+				_animator?.PlayAttack(direction);
+				Effects.BurstEffect.Spawn(this, GlobalPosition + direction * 14, new Color(0.3f, 0.9f, 1), 9, 0.14f);
 				float finalDamage = BaseDamage * _damageMultiplier;
 				if (_hasPiercingUpgrade)
 				{
@@ -249,6 +255,7 @@ namespace KleinesSpiel.Scripts.Player
 			_dashTimer = DashDurationSeconds;
 			_dashInvincibilityTimer = DashInvincibilitySeconds;
 			_dashDirectionVector = direction;
+			_animator?.PlayDash(DashDurationSeconds);
 		}
 
 		private void ProcessDash(float dt)
@@ -325,11 +332,12 @@ namespace KleinesSpiel.Scripts.Player
 
 		public void TakeDamage(int halfHeartsAmount)
 		{
-			if (IsInvincible())
+			if (_dead || IsInvincible())
 				return;
 
 			_currentHealthHalfHearts -= halfHeartsAmount;
 			_hurtInvincibilityTimer = HurtInvincibilitySeconds;
+			_animator?.PlayHurt();
 
 			// Treffer zurueckgesetzt den Schaden-Multiplikator
 			ResetDamageMultiplier();
@@ -342,6 +350,12 @@ namespace KleinesSpiel.Scripts.Player
 
 		private void Die()
 		{
+			if (_dead) return;
+			_dead = true;
+			SetPhysicsProcess(false);
+			CollisionLayer = 0;
+			CollisionMask = 0;
+			_animator?.PlayDeath();
 			GetTree().Paused = true;
 
 			var gameOverScene = GD.Load<PackedScene>("res://Scenes/UI/GameOverScreen.tscn");

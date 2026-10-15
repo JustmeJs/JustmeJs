@@ -51,6 +51,8 @@ namespace KleinesSpiel.Scripts.Enemies
 			if (ProjectileScene == null)
 				return;
 
+			AnimateAttack(GetDirectionToPlayer());
+
 			Vector2[] directions =
 			{
 				new Vector2(0, -1),

@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://enemy_fourway_scene"]
+[gd_scene load_steps=6 format=3 uid="uid://enemy_fourway_scene"]
 
 [ext_resource type="Script" path="res://Scripts/Enemies/EnemyFourWay.cs" id="1"]
 [ext_resource type="PackedScene" path="res://Scenes/Projectiles/EnemyProjectile.tscn" id="2"]
 
-[ext_resource type="Texture2D" path="res://Resources/Art/watcher.tres" id="art"]
+[ext_resource type="SpriteFrames" path="res://Resources/Animations/watcher_frames.tres" id="art"]
+[ext_resource type="Script" path="res://Scripts/Common/ActorAnimator.cs" id="animator"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(28, 28)
@@ -21,10 +22,15 @@ ProjectileScene = ExtResource("2")
 shape = SubResource("RectangleShape2D_1")
 
 [node name="Visual" type="Node2D" parent="."]
+script = ExtResource("animator")
+Floating = true
+Accent = Color(0.8, 0.3, 1, 1)
 
-[node name="Sprite" type="Sprite2D" parent="Visual"]
-texture = ExtResource("art")
-scale = Vector2(0.12759171, 0.12759171)
+[node name="Sprite" type="AnimatedSprite2D" parent="Visual"]
+sprite_frames = ExtResource("art")
+animation = &"idle"
+autoplay = "idle"
+scale = Vector2(0.20833333, 0.20833333)
 
 [node name="Placeholder" type="ColorRect" parent="Visual"]
 visible = false

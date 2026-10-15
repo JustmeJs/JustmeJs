@@ -1,10 +1,12 @@
-[gd_scene load_steps=5 format=3 uid="uid://main_menu_scene"]
+[gd_scene load_steps=6 format=3 uid="uid://main_menu_scene"]
 
 [ext_resource type="Script" path="res://Scripts/UI/MainMenu.cs" id="1"]
 
 [ext_resource type="Theme" path="res://Resources/Art/dungeon_theme.tres" id="theme"]
 [ext_resource type="Texture2D" path="res://Resources/Art/hero.tres" id="hero"]
 [ext_resource type="Texture2D" path="res://Assets/Sprites/Tiles/stone_floor.svg" id="stone"]
+
+[ext_resource type="Script" path="res://Scripts/UI/MenuHero.cs" id="hero_motion"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -35,6 +37,7 @@ layout_mode = 2
 theme_override_constants/separation = 24
 
 [node name="HeroArt" type="TextureRect" parent="CenterContainer/VBoxContainer"]
+script = ExtResource("hero_motion")
 layout_mode = 2
 custom_minimum_size = Vector2(112, 112)
 texture = ExtResource("hero")

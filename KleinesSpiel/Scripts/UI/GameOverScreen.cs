@@ -9,6 +9,7 @@ namespace KleinesSpiel.Scripts.UI
 	{
 		public override void _Ready()
 		{
+			MenuMotion.Configure(this);
 			ProcessMode = ProcessModeEnum.Always;
 
 			var retryButton = GetNode<Button>("CenterContainer/VBoxContainer/RetryButton");

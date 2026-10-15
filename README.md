@@ -1,6 +1,6 @@
 # Kleines Spiel
 
-Juego 2D roguelike desarrollado en Godot y C#, con assets integrados de personajes, enemigos, jefes, objetos y mazmorra.
+Juego 2D roguelike desarrollado en Godot y C#, con personajes animados, combate, objetos y efectos de mazmorra.
 
 ## Descargar el proyecto listo para abrir
 
@@ -14,9 +14,11 @@ Controles: WASD para moverse, flechas para disparar, espacio para dash y Escape 
 
 ## Vista previa
 
-![Vista previa de los assets](KleinesSpiel/Documentation/assets_preview.png)
+![Vista previa de las animaciones](KleinesSpiel/Documentation/animations_preview.gif)
 
-La imagen muestra una composición de los sprites dentro de la sala inicial.
+La galería muestra reposo, movimiento, ataques, impactos, dash y derrota para el héroe y los enemigos/jefes. Los objetos, proyectiles, puertas, antorchas e interfaz también tienen efectos animados.
+
+Validado con Godot 4.3 .NET: compilación sin errores y 180 comprobaciones de animación superadas.
 
 [Documentación de los assets y validación](KleinesSpiel/README_ASSETS.md)
 

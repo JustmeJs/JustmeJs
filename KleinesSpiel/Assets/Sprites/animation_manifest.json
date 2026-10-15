@@ -1,0 +1,95 @@
+{
+  "image": "res://Assets/Sprites/characters_animated.png",
+  "image_size": [
+    1254,
+    1254
+  ],
+  "canvas_size": [
+    192,
+    192
+  ],
+  "column_width": 156.75,
+  "row_boundaries": [
+    0,
+    151,
+    298,
+    446,
+    594,
+    749,
+    906,
+    1063,
+    1254
+  ],
+  "row_characters": [
+    "hero",
+    "imp",
+    "archer",
+    "watcher",
+    "demon_boss",
+    "ogre_boss",
+    "archer_boss",
+    "watcher_boss"
+  ],
+  "column_poses": [
+    "idle_a",
+    "idle_b",
+    "step_a",
+    "step_b",
+    "attack_windup",
+    "attack_release",
+    "hurt",
+    "defeated"
+  ],
+  "animations": {
+    "idle": {
+      "columns": [
+        0,
+        1
+      ],
+      "fps": 3,
+      "loop": true
+    },
+    "walk": {
+      "columns": [
+        2,
+        0,
+        3,
+        0
+      ],
+      "fps": 10,
+      "loop": true
+    },
+    "attack": {
+      "columns": [
+        4,
+        5,
+        0
+      ],
+      "fps": 15,
+      "loop": false
+    },
+    "hurt": {
+      "columns": [
+        6
+      ],
+      "fps": 8,
+      "loop": false
+    },
+    "death": {
+      "columns": [
+        6,
+        7
+      ],
+      "fps": 6,
+      "loop": false
+    },
+    "dash": {
+      "columns": [
+        2,
+        3
+      ],
+      "fps": 22,
+      "loop": true
+    }
+  }
+}

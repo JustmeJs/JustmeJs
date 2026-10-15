@@ -1,8 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://item_pickup_scene"]
+[gd_scene load_steps=5 format=3 uid="uid://item_pickup_scene"]
 
 [ext_resource type="Script" path="res://Scripts/Items/ItemPickup.cs" id="1"]
 
 [ext_resource type="Texture2D" path="res://Resources/Art/heart_medallion.tres" id="art"]
+
+[ext_resource type="Script" path="res://Scripts/Items/PickupMotion.cs" id="motion"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(40, 40)
@@ -17,6 +19,8 @@ script = ExtResource("1")
 shape = SubResource("RectangleShape2D_1")
 
 [node name="Visual" type="Node2D" parent="."]
+script = ExtResource("motion")
+IsHeart = false
 
 [node name="Sprite" type="Sprite2D" parent="Visual"]
 texture = ExtResource("art")

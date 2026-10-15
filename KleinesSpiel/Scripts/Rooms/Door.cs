@@ -27,6 +27,10 @@ namespace KleinesSpiel.Scripts.Rooms
 		private Sprite2D _doorSprite;
 		private Texture2D _openTexture;
 		private Texture2D _closedTexture;
+		private ShaderMaterial _doorMaterial;
+		private Tween _doorTween;
+		private bool _artInitialized;
+		public bool GetIsOpen() => _isOpen;
 
 		public override void _Ready()
 		{
@@ -37,6 +41,16 @@ namespace KleinesSpiel.Scripts.Rooms
 			_doorSprite = GetNodeOrNull<Sprite2D>("DoorSprite");
 			_openTexture = GD.Load<Texture2D>("res://Assets/Sprites/Tiles/door_open.svg");
 			_closedTexture = GD.Load<Texture2D>("res://Assets/Sprites/Tiles/door_closed.svg");
+			if (_doorSprite != null)
+			{
+				_doorMaterial = new ShaderMaterial
+				{
+					Shader = GD.Load<Shader>("res://Assets/Sprites/Tiles/door_transition.gdshader")
+				};
+				_doorMaterial.SetShaderParameter("open_texture", _openTexture);
+				_doorSprite.Material = _doorMaterial;
+				_doorSprite.Texture = _closedTexture;
+			}
 
 			if (_trigger != null)
 			{
@@ -75,8 +89,8 @@ namespace KleinesSpiel.Scripts.Rooms
 
 		public void SetOpen()
 		{
+			AnimateDoor(true);
 			_isOpen = true;
-			if (_doorSprite != null) _doorSprite.Texture = _openTexture;
 			_blockerShape?.SetDeferred("disabled", true);
 			if (_visual != null)
 				_visual.Color = new Color(0.2f, 0.8f, 0.3f, 1f); // gruen = offen
@@ -84,11 +98,29 @@ namespace KleinesSpiel.Scripts.Rooms
 
 		public void SetClosed()
 		{
+			AnimateDoor(false);
 			_isOpen = false;
-			if (_doorSprite != null) _doorSprite.Texture = _closedTexture;
 			_blockerShape?.SetDeferred("disabled", false);
 			if (_visual != null)
 				_visual.Color = new Color(0.5f, 0.3f, 0.1f, 1f); // braun = zu
+		}
+
+		private void AnimateDoor(bool open)
+		{
+			if (_doorMaterial == null) return;
+			if (!_artInitialized)
+			{
+				_artInitialized = true;
+				_doorMaterial.SetShaderParameter("openness", open ? 1f : 0f);
+				return;
+			}
+			if (_isOpen == open) return;
+			_doorTween?.Kill();
+			_doorTween = CreateTween();
+			_doorTween.TweenProperty(_doorMaterial, "shader_parameter/openness", open ? 1f : 0f, 0.28f)
+				.SetTrans(Tween.TransitionType.Cubic).SetEase(Tween.EaseType.Out);
+			Effects.BurstEffect.Spawn(this, GlobalPosition,
+				open ? new Color(0.4f, 1, 0.8f) : new Color(1, 0.7f, 0.3f), 18, 0.3f);
 		}
 
 		private void OnBodyEntered(Node2D body)
