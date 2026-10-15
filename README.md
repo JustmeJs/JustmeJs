@@ -8,6 +8,8 @@ Juego 2D roguelike desarrollado en Godot y C#, con assets integrados de personaj
 
 Extrae el ZIP e importa `KleinesSpiel/project.godot` con **Godot 4.3 .NET** y **.NET SDK 8**. Compila y pulsa **F5**. El ZIP contiene el proyecto; no es un ejecutable de Windows.
 
+El ZIP también incluye las entradas de carpetas que necesita el importador de proyectos de Godot. Si una importación anterior falló, usa una carpeta de destino nueva y vacía.
+
 Controles: WASD para moverse, flechas para disparar, espacio para dash y Escape para pausar.
 
 ## Vista previa
@@ -17,3 +19,5 @@ Controles: WASD para moverse, flechas para disparar, espacio para dash y Escape 
 La imagen muestra una composición de los sprites dentro de la sala inicial.
 
 [Documentación de los assets y validación](KleinesSpiel/README_ASSETS.md)
+
+Para volver a generar el ZIP desde este repositorio: `python Tools/package_project.py`.
