@@ -18,11 +18,3 @@ shape = SubResource("CircleShape2D_1")
 [node name="Sprite" type="Sprite2D" parent="."]
 texture = ExtResource("art")
 scale = Vector2(0.05104, 0.05104)
-
-[node name="Placeholder" type="ColorRect" parent="."]
-visible = false
-offset_left = -4.0
-offset_top = -4.0
-offset_right = 4.0
-offset_bottom = 4.0
-color = Color(0.8, 0.1, 0.1, 1)

@@ -1,221 +1,192 @@
+using System;
+using System.Linq;
 using Godot;
 
 namespace KleinesSpiel.Scripts.Rooms
 {
-	// Wird auf die Wurzel jeder Raum-Szene gelegt.
-	// Erwartet zwei Kind-Knoten (falls vorhanden):
-	//   "Enemies" -> enthaelt alle Enemy-Instanzen dieses Raumes
-	//   "Doors"   -> enthaelt alle Door-Instanzen dieses Raumes
-	//
-	// Zufaellige Gegner (normale Kampfraeume):
-	//   "EnemySpawnPoints" -> Marker2D-Kinder, aus denen zufaellig ein paar
-	//   ausgewaehlt werden. An jedem gewaehlten Punkt wird ein zufaelliger
-	//   Gegnertyp (Melee/Ranged/FourWay) platziert. Das Kartenlayout selbst
-	//   (welche Tuer zu welchem Raum fuehrt) bleibt dabei unveraendert.
-	//
-	// Zufaelliger Boss (nur BossRoom):
-	//   "BossSpawnPoint" -> ein einzelner Marker2D. Wenn UseRandomBoss an ist,
-	//   wird eine zufaellige Szene aus BossVariants dort platziert.
-	public partial class Room : Node2D
-	{
-		[Export] public bool ShowVictoryOnClear = false;
+    public partial class Room : Node2D
+    {
+        public RoomDefinition Definition;
+        public DungeonFloor Floor;
+        private Node2D _enemies;
+        private int _alive;
+        private Enemies.Enemy _boss;
+        private bool _portalQueued;
+        public bool IsCleared() => Definition.Cleared;
+        public string GetRoomId() => Definition.Id;
+        public string GetRoomKind() => Definition.Kind.ToString();
+        public int GetLayoutIndex() => Definition.Layout;
+        public int GetAliveCount() => _alive;
 
-		[ExportGroup("Zufaellige Gegner")]
-		[Export] public bool UseRandomEnemies = true;
-		[Export] public int MinRandomEnemies = 2;
-		[Export] public int MaxRandomEnemies = 3;
+        public override void _Ready()
+        {
+            BuildGeometry();
+            BuildDoors();
+            _enemies = new Node2D { Name = "Enemies" };
+            AddChild(_enemies);
+            SpawnContent();
+            Definition.Cleared = _alive == 0;
+            SetDoors(Definition.Cleared);
+        }
 
-		[ExportGroup("Zufaelliger Boss")]
-		[Export] public bool UseRandomBoss = false;
-		[Export] public Godot.Collections.Array<PackedScene> BossVariants = new();
-		[Export] public string BossDisplayName = "Boss";
+        private void BuildGeometry()
+        {
+            AddChild(new TextureRect
+            {
+                Name = "Floor", Position = new Vector2(272, 48), Size = new Vector2(480, 480),
+                Texture = GD.Load<Texture2D>("res://Assets/Sprites/Tiles/stone_floor.svg"),
+                StretchMode = TextureRect.StretchModeEnum.Tile, MouseFilter = Control.MouseFilterEnum.Ignore,
+                ZIndex = -20, SelfModulate = Floor.Zone == 2 ? new Color(1.02f, 0.72f, 1.15f) : Colors.White
+            });
+            var walls = new StaticBody2D { Name = "Walls", CollisionLayer = 1, CollisionMask = 0 };
+            AddChild(walls);
+            for (int d = 0; d < 4; d++)
+            {
+                bool horizontal = d < 2;
+                Vector2 center = DoorPosition((Door.Direction)d);
+                Vector2 axis = horizontal ? Vector2.Right : Vector2.Down;
+                if (Definition.Neighbors.ContainsKey((Door.Direction)d))
+                {
+                    AddRectangle(walls, center - axis * 136, horizontal ? new Vector2(208, 32) : new Vector2(32, 208));
+                    AddRectangle(walls, center + axis * 136, horizontal ? new Vector2(208, 32) : new Vector2(32, 208));
+                }
+                else AddRectangle(walls, center, horizontal ? new Vector2(480, 32) : new Vector2(32, 480));
+            }
+            var obstacles = new StaticBody2D { Name = "Obstacles", CollisionLayer = 1, CollisionMask = 0 };
+            AddChild(obstacles);
+            foreach (var rectangle in RoomLayouts.Obstacles(Definition.Layout))
+                AddRectangle(obstacles, rectangle.GetCenter(), rectangle.Size);
+            AddChild(new RoomArt { Name = "RoomArt", ZIndex = -10,
+                StoneTint = Floor.Zone == 2 ? new Color(1.1f, 0.75f, 1.2f) : Colors.White,
+                Amethyst = Floor.Zone == 2, RoomKind = Definition.Kind });
+            if (Definition.Kind == RoomMapType.Start)
+            {
+                AddChild(new Label
+                {
+                    Name = "TutorialLabel", Position = new Vector2(305, 225), Size = new Vector2(414, 110),
+                    Text = $"{Floor.Name}\nWASD: Bewegen   Pfeile: Zaubern\nLeertaste: Dash   Esc: Pause\nErkunde den Dungeon in alle Richtungen!",
+                    HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+                    AutowrapMode = TextServer.AutowrapMode.WordSmart, MouseFilter = Control.MouseFilterEnum.Ignore
+                });
+            }
+        }
 
-		// Die "normalen" Gegnertypen, aus denen bei zufaelligen Kampfraeumen
-		// gewaehlt wird. Bosse und ihre groesseren Varianten spawnen NICHT
-		// hier, sondern ueber BossVariants (nur in der BossRoom).
-		private static readonly string[] RandomEnemyScenePaths =
-		{
-			"res://Scenes/Enemies/EnemyMelee.tscn",
-			"res://Scenes/Enemies/EnemyRanged.tscn",
-			"res://Scenes/Enemies/EnemyFourWay.tscn",
-		};
+        public static void AddRectangle(Node parent, Vector2 position, Vector2 size, float rotation = 0)
+        {
+            parent.AddChild(new CollisionShape2D
+            { Name = "CollisionShape2D", Position = position, Rotation = rotation, Shape = new RectangleShape2D { Size = size } });
+        }
 
-		private int _aliveEnemyCount;
+        public static Vector2 DoorPosition(Door.Direction direction) => direction switch
+        {
+            Door.Direction.Up => new Vector2(512, 48), Door.Direction.Down => new Vector2(512, 528),
+            Door.Direction.Left => new Vector2(272, 288), _ => new Vector2(752, 288)
+        };
 
-		public override void _Ready()
-		{
-			bool alreadyCleared = DungeonManager.Instance != null && DungeonManager.Instance.IsRoomCleared(SceneFilePath);
+        private void BuildDoors()
+        {
+            var doors = new Node2D { Name = "Doors" };
+            AddChild(doors);
+            foreach (var pair in Definition.Neighbors)
+            {
+                var door = new Door { Name = $"Door{pair.Key}", Position = DoorPosition(pair.Key),
+                    TargetRoomId = pair.Value, SourceRoomId = Definition.Id, DoorDirection = pair.Key,
+                    TargetKind = Floor.Rooms[pair.Value].Kind };
+                var blocker = new StaticBody2D { Name = "Blocker", CollisionLayer = 1, CollisionMask = 0 };
+                door.AddChild(blocker);
+                float rotation = pair.Key is Door.Direction.Left or Door.Direction.Right ? Mathf.Pi / 2 : 0;
+                AddRectangle(blocker, Vector2.Zero, new Vector2(64, 32), rotation);
+                var trigger = new Area2D { Name = "TriggerArea", CollisionLayer = 0, CollisionMask = 2 };
+                AddRectangle(trigger, Vector2.Zero, new Vector2(64, 32), rotation);
+                door.AddChild(trigger);
+                door.AddChild(new Sprite2D { Name = "DoorSprite", Rotation = rotation,
+                    Scale = new Vector2(64f / 48, 1),
+                    Texture = GD.Load<Texture2D>("res://Assets/Sprites/Tiles/door_closed.svg") });
+                doors.AddChild(door);
+            }
+        }
 
-			var enemiesContainer = GetNodeOrNull<Node>("Enemies");
+        private void SpawnContent()
+        {
+            if (Definition.Kind == RoomMapType.Treasure && !Definition.TreasureCollected)
+            {
+                var pickup = GD.Load<PackedScene>("res://Scenes/Items/ItemPickup.tscn").Instantiate<Items.ItemPickup>();
+                pickup.Name = "TreasureItem";
+                pickup.Data = Items.ItemCatalog.Get(Definition.ItemIndex);
+                pickup.Position = new Vector2(512, 288);
+                pickup.Collected += () => Definition.TreasureCollected = true;
+                AddChild(pickup);
+            }
+            if (Definition.Cleared) return;
+            var random = new Random(Definition.ContentSeed);
+            if (Definition.Kind == RoomMapType.Boss)
+            {
+                _boss = GD.Load<PackedScene>(Floor.BossScene).Instantiate<Enemies.Enemy>();
+                if (Floor.Zone == 2) _boss.MaxHealth *= 1.5f;
+                AddEnemy(_boss, new Vector2(512, 200));
+                RefreshBossHud();
+            }
+            else if (Definition.Kind == RoomMapType.Normal)
+            {
+                var points = new[] { new Vector2(352,144), new Vector2(512,144), new Vector2(672,144),
+                    new Vector2(352,288), new Vector2(672,288), new Vector2(352,432), new Vector2(512,432), new Vector2(672,432) };
+                var player = GetTree().GetFirstNodeInGroup("player") as Node2D;
+                var safe = points.Where(p => !RoomLayouts.Obstacles(Definition.Layout).Any(r => r.Grow(22).HasPoint(p))
+                    && (player == null || player.Position.DistanceTo(p) > 90)).ToList();
+                DungeonFloor.Shuffle(safe, random);
+                string[] types = { "res://Scenes/Enemies/EnemyMelee.tscn", "res://Scenes/Enemies/EnemyRanged.tscn", "res://Scenes/Enemies/EnemyFourWay.tscn" };
+                int count = Math.Min(safe.Count, random.Next(2, Floor.Zone == 1 ? 4 : 5));
+                for (int i = 0; i < count; i++)
+                {
+                    var enemy = GD.Load<PackedScene>(types[random.Next(types.Length)]).Instantiate<Enemies.Enemy>();
+                    if (Floor.Zone == 2) { enemy.MaxHealth *= 1.4f; enemy.MoveSpeed *= 1.1f; }
+                    AddEnemy(enemy, safe[i]);
+                }
+            }
+        }
 
-			if (!alreadyCleared && enemiesContainer != null)
-			{
-				var spawnPointsContainer = GetNodeOrNull<Node>("EnemySpawnPoints");
-				if (UseRandomEnemies && spawnPointsContainer != null)
-				{
-					SpawnRandomEnemies(enemiesContainer, spawnPointsContainer);
-				}
+        private void AddEnemy(Enemies.Enemy enemy, Vector2 position)
+        {
+            enemy.Position = position;
+            enemy.Defeated += OnDefeated;
+            _alive++;
+            _enemies.AddChild(enemy);
+        }
 
-				if (UseRandomBoss && BossVariants != null && BossVariants.Count > 0)
-				{
-					SpawnRandomBoss(enemiesContainer);
-				}
-			}
+        private void OnDefeated(Enemies.Enemy enemy)
+        {
+            _alive--;
+            if (_alive != 0 || Definition.Cleared) return;
+            Definition.Cleared = true;
+            SetDoors(true);
+            DungeonManager.Instance?.OnRoomCleared(this);
+        }
 
-			if (enemiesContainer != null)
-			{
-				foreach (Node child in enemiesContainer.GetChildren())
-				{
-					if (child is Enemies.Enemy enemy)
-					{
-						if (alreadyCleared)
-						{
-							// Dieser Raum wurde in diesem Durchlauf schon geleert:
-							// die Gegner sollen nicht erneut spawnen.
-							enemy.DisableAndFree();
-						}
-						else
-						{
-							_aliveEnemyCount++;
-							enemy.Defeated += OnEnemyDefeated;
-						}
-					}
-				}
-			}
+        private void SetDoors(bool open)
+        {
+            foreach (var child in GetNode("Doors").GetChildren())
+                if (child is Door door) { if (open) door.SetOpen(); else door.SetClosed(); }
+        }
 
-			if (_aliveEnemyCount > 0)
-			{
-				SetDoors(open: false);
-			}
-			else
-			{
-				SetDoors(open: true);
+        public void RefreshBossHud()
+        {
+            if (IsInstanceValid(_boss) && _boss.GetCurrentHealth() > 0)
+                (GetTree().GetFirstNodeInGroup("hud") as UI.HUD)?.ShowBossHealthBar(_boss,
+                    Floor.Zone == 2 ? "Herrscher der Amethyst-Ruinen" : "Wächter der Aschekrypta");
+        }
 
-				if (!alreadyCleared)
-				{
-					MarkThisRoomCleared();
-				}
-			}
-		}
+        public void CreatePortal()
+        {
+            if (_portalQueued || HasNode("ZonePortal")) return;
+            _portalQueued = true;
+            CallDeferred(nameof(SpawnPortal));
+        }
 
-		// Waehlt zufaellig 2-3 (siehe MinRandomEnemies/MaxRandomEnemies) der
-		// vordefinierten Spawn-Punkte aus und stellt dort jeweils einen
-		// zufaelligen Gegnertyp hin. Laeuft nur beim ERSTEN Betreten eines
-		// Raumes (siehe alreadyCleared oben), damit beim Zurueckgehen keine
-		// neuen Gegner nachspawnen.
-		private void SpawnRandomEnemies(Node enemiesContainer, Node spawnPointsContainer)
-		{
-			var spawnPoints = new System.Collections.Generic.List<Marker2D>();
-			foreach (Node child in spawnPointsContainer.GetChildren())
-			{
-				if (child is Marker2D marker)
-					spawnPoints.Add(marker);
-			}
-			if (spawnPoints.Count == 0)
-				return;
-
-			var rng = new RandomNumberGenerator();
-			rng.Randomize();
-
-			int maxPossible = Mathf.Min(MaxRandomEnemies, spawnPoints.Count);
-			int minPossible = Mathf.Min(MinRandomEnemies, maxPossible);
-			int count = rng.RandiRange(minPossible, maxPossible);
-
-			// Spawn-Punkte mischen (Fisher-Yates), damit nicht immer dieselben
-			// zuerst drankommen.
-			for (int i = spawnPoints.Count - 1; i > 0; i--)
-			{
-				int j = rng.RandiRange(0, i);
-				(spawnPoints[i], spawnPoints[j]) = (spawnPoints[j], spawnPoints[i]);
-			}
-
-			for (int i = 0; i < count; i++)
-			{
-				string scenePath = RandomEnemyScenePaths[rng.RandiRange(0, RandomEnemyScenePaths.Length - 1)];
-				var scene = GD.Load<PackedScene>(scenePath);
-				if (scene == null)
-					continue;
-
-				var enemyInstance = scene.Instantiate<Enemies.Enemy>();
-				enemiesContainer.AddChild(enemyInstance);
-				enemyInstance.GlobalPosition = spawnPoints[i].GlobalPosition;
-			}
-		}
-
-		// Waehlt eine zufaellige Boss-Variante aus BossVariants und platziert
-		// sie an "BossSpawnPoint". Zeigt danach die Boss-Lebensleiste in der HUD.
-		private void SpawnRandomBoss(Node enemiesContainer)
-		{
-			var bossSpawnPoint = GetNodeOrNull<Marker2D>("BossSpawnPoint");
-			if (bossSpawnPoint == null)
-				return;
-
-			var rng = new RandomNumberGenerator();
-			rng.Randomize();
-
-			var chosenScene = BossVariants[rng.RandiRange(0, BossVariants.Count - 1)];
-			if (chosenScene == null)
-				return;
-
-			var bossInstance = chosenScene.Instantiate<Enemies.Enemy>();
-			enemiesContainer.AddChild(bossInstance);
-			bossInstance.GlobalPosition = bossSpawnPoint.GlobalPosition;
-
-			var hud = GetTree().GetFirstNodeInGroup("hud") as UI.HUD;
-			hud?.ShowBossHealthBar(bossInstance, BossDisplayName);
-		}
-
-		private void OnEnemyDefeated(Enemies.Enemy enemy)
-		{
-			_aliveEnemyCount--;
-			if (_aliveEnemyCount <= 0)
-			{
-				SetDoors(open: true);
-				MarkThisRoomCleared();
-
-				if (ShowVictoryOnClear)
-				{
-					ShowVictoryScreen();
-				}
-			}
-		}
-
-		private void MarkThisRoomCleared()
-		{
-			DungeonManager.Instance?.MarkRoomCleared(SceneFilePath);
-		}
-
-		private void ShowVictoryScreen()
-		{
-			GetTree().Paused = true;
-
-			var victoryScene = GD.Load<PackedScene>("res://Scenes/UI/VictoryScreen.tscn");
-			var instance = victoryScene.Instantiate();
-			GetTree().Root.AddChild(instance);
-		}
-
-		private void SetDoors(bool open)
-		{
-			var doorsContainer = GetNodeOrNull<Node>("Doors");
-			if (doorsContainer == null)
-				return;
-
-			foreach (Node child in doorsContainer.GetChildren())
-			{
-				if (child is Door door)
-				{
-					if (open)
-						door.SetOpen();
-					else
-						door.SetClosed();
-				}
-			}
-		}
-
-		// Wird vom DungeonManager aufgerufen, sobald der Spieler diesen Raum betritt.
-		public void OnPlayerEntered(Player.Player player)
-		{
-			player?.OnEnteredNewRoom();
-		}
-	}
+        private void SpawnPortal()
+        {
+            if (!HasNode("ZonePortal"))
+                AddChild(new ZonePortal { Name = "ZonePortal", SourceRoomId = Definition.Id, Position = new Vector2(512, 360) });
+            _portalQueued = false;
+        }
+    }
 }

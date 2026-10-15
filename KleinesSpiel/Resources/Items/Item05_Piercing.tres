@@ -6,7 +6,7 @@
 
 [resource]
 script = ExtResource("1")
-ItemName = "Durchdringender Blick"
+ItemName = "Durchdringende Spitze"
 EffectDescription = "Deine Projektile durchschlagen ab sofort einen zusaetzlichen Gegner, bevor sie verschwinden - ideal wenn mehrere Gegner in einer Reihe stehen."
 EffectType = 4
 EffectValue = 1.0

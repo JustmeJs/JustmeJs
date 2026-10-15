@@ -6,7 +6,7 @@
 
 [resource]
 script = ExtResource("1")
-ItemName = "Schnellfeuer"
+ItemName = "Sanduhr des Zaubers"
 EffectDescription = "Die Pause zwischen deinen Schuessen sinkt dauerhaft um 20% - du kannst spuerbar schneller hintereinander feuern."
 EffectType = 2
 EffectValue = 20.0

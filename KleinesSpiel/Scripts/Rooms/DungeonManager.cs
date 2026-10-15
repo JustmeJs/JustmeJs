@@ -1,265 +1,260 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 namespace KleinesSpiel.Scripts.Rooms
 {
-	// Singleton (als Autoload registriert), das weiss, welcher Raum gerade
-	// aktiv ist, und den Wechsel zwischen Raeumen uebernimmt.
-	public partial class DungeonManager : Node
-	{
-		public static DungeonManager Instance { get; private set; }
+    public partial class DungeonManager : Node
+    {
+        public static DungeonManager Instance { get; private set; }
+        [Export(PropertyHint.Range, "0,1,0.01")] public float NextZoneChance = 0.7f;
+        [Export] public int SeedOverride;
+        private Node _roomContainer;
+        private Player.Player _player;
+        private DungeonFloor _floor;
+        private Room _current;
+        private readonly Dictionary<string, Room> _instances = new();
+        private readonly Dictionary<string, MinimapRoomInfo> _map = new();
+        private readonly Queue<int> _items = new();
+        private Random _exitRandom;
+        private int _seed;
+        private bool _transitionQueued;
+        private int _arrivalFrames;
+        private bool _finished;
+        private PackedScene _pauseMenuScene;
+        private UI.PauseMenu _pauseMenu;
+        public event Action MapChanged;
+        public int GetZoneIndex() => _floor?.Zone ?? 0;
+        public int GetRunSeed() => _seed;
+        public string GetZoneName() => _floor?.Name ?? "";
+        public string GetCurrentRoomId() => _current?.Definition.Id ?? "";
+        public Room GetCurrentRoom() => _current;
+        public bool GetPortalAvailable() => _floor?.PortalOutcome == true;
+        public bool GetRunFinished() => _finished;
+        public IReadOnlyDictionary<string, MinimapRoomInfo> GetMapEntries() => _map;
 
-		private Node _roomContainer;
-		private Node2D _currentRoomInstance;
-		private Player.Player _player;
+        public override void _Ready()
+        {
+            Instance = this;
+            ProcessMode = ProcessModeEnum.Always;
+            _pauseMenuScene = GD.Load<PackedScene>("res://Scenes/UI/PauseMenu.tscn");
+        }
 
-		// Merkt sich, welche Raeume (per Szenen-Pfad) in diesem Durchlauf
-		// schon geleert wurden, damit ihre Gegner nicht erneut spawnen,
-		// wenn man zurueckgeht und wieder hineingeht.
-		private readonly HashSet<string> _clearedRoomPaths = new();
+        public override void _PhysicsProcess(double delta)
+        {
+            if (!GetTree().Paused && _arrivalFrames > 0) _arrivalFrames--;
+        }
 
-		// Merkt sich, in welchen TreasureRooms das Item in diesem Durchlauf
-		// schon abgeholt wurde - verhindert, dass beim erneuten Betreten ein
-		// weiteres (zweites) Item spawnt.
-		private readonly HashSet<string> _collectedTreasurePaths = new();
+        public override void _UnhandledInput(InputEvent @event)
+        {
+            if (!@event.IsActionPressed("pause")) return;
+            if (IsInstanceValid(_pauseMenu))
+            {
+                _pauseMenu.QueueFree();
+                _pauseMenu = null;
+                GetTree().Paused = false;
+            }
+            else if (!GetTree().Paused && IsInstanceValid(_player) && !_finished)
+            {
+                _pauseMenu = _pauseMenuScene.Instantiate<UI.PauseMenu>();
+                _pauseMenu.Closed += () => _pauseMenu = null;
+                GetTree().Root.AddChild(_pauseMenu);
+                GetTree().Paused = true;
+            }
+            GetViewport().SetInputAsHandled();
+        }
 
-		// Gitterposition + Typ jeder bekannten Sala, fuer die Minimap.
-		// Wird automatisch aus den Door.DoorDirection-Werten aufgebaut -
-		// das eigentliche Kartenlayout (welche Tuer zu welcher Sala fuehrt)
-		// bleibt komplett in den Room-Szenen definiert wie bisher.
-		private readonly Dictionary<string, MinimapRoomInfo> _mapEntries = new();
-		private string _currentRoomScenePath;
+        public void Initialize(Node roomContainer, Player.Player player)
+        {
+            ReleaseRooms();
+            _roomContainer = roomContainer;
+            _player = player;
+            _seed = SeedOverride != 0 ? SeedOverride : Random.Shared.Next(1, int.MaxValue);
+            _exitRandom = new Random(_seed ^ 0x53ad1);
+            var bag = Enumerable.Range(0, Items.ItemCatalog.Paths.Length).ToList();
+            DungeonFloor.Shuffle(bag, new Random(_seed ^ 0x195af));
+            _items.Clear();
+            foreach (int index in bag) _items.Enqueue(index);
+            _finished = false;
+            _transitionQueued = false;
+            BeginZone(1);
+        }
 
-		// Feuert jedes Mal, wenn sich die Minimap-Daten aendern (neue Sala
-		// betreten / neue Nachbar-Sala entdeckt), damit die Minimap-UI nur
-		// bei Bedarf neu zeichnet statt jeden Frame zu pollen.
-		public event System.Action MapChanged;
+        private void BeginZone(int zone)
+        {
+            ReleaseRooms();
+            ClearProjectiles();
+            _floor = DungeonFloor.Generate(_seed, zone);
+            foreach (var room in _floor.Rooms.Values.Where(r => r.Kind == RoomMapType.Treasure))
+                room.ItemIndex = _items.Dequeue();
+            _map.Clear();
+            EnterRoom(_floor.StartId, new Vector2(512, 480));
+            Hud()?.ShowItemPopup($"Zone {zone}: {_floor.Name}", "Erkunde die Verzweigungen und finde den Boss.", 3);
+        }
 
-		private PackedScene _pauseMenuScene;
-		private UI.PauseMenu _activePauseMenu;
+        private void ReleaseRooms()
+        {
+            foreach (var room in _instances.Values)
+                if (IsInstanceValid(room)) room.QueueFree();
+            _instances.Clear();
+            _current = null;
+        }
 
-		public override void _Ready()
-		{
-			Instance = this;
+        public override void _ExitTree()
+        {
+            ReleaseRooms();
+            if (Instance == this) Instance = null;
+        }
 
-			// WICHTIG: Always nur hier auf dem Autoload setzen, NICHT auf
-			// MainController/Main - sonst "erbt" der Player (und alles
-			// andere unter Main) ueber den Standard-Modus "Inherit" dieses
-			// Always und bewegt sich munter weiter, obwohl pausiert ist.
-			// DungeonManager liegt als Autoload ausserhalb von Main.tscn,
-			// ist also kein Vorfahre des Players - sein Always bleibt lokal.
-			ProcessMode = ProcessModeEnum.Always;
+        public void ForgetRun()
+        {
+            // Detached rooms do not belong to Main; release them before retry/menu.
+            ReleaseRooms();
+            _map.Clear();
+        }
 
-			_pauseMenuScene = GD.Load<PackedScene>("res://Scenes/UI/PauseMenu.tscn");
-		}
+        public bool Travel(int direction)
+        {
+            if (_transitionQueued || _arrivalFrames > 0 || _finished || GetTree().Paused || !IsInstanceValid(_current)) return false;
+            var dir = (Door.Direction)direction;
+            if (!_current.Definition.Neighbors.ContainsKey(dir) || !_current.IsCleared()) return false;
+            _transitionQueued = true;
+            CallDeferred(nameof(FinishTravel), direction);
+            return true;
+        }
 
-		public override void _UnhandledInput(InputEvent @event)
-		{
-			if (@event.IsActionPressed("pause"))
-			{
-				TogglePauseMenu();
-				GetViewport().SetInputAsHandled();
-			}
-		}
+        private void FinishTravel(int direction)
+        {
+            if (!IsInstanceValid(_current) || _finished || GetTree().Paused
+                || _player.GetCurrentHealthHalfHearts() <= 0) { _transitionQueued = false; return; }
+            var dir = (Door.Direction)direction;
+            string target = _current.Definition.Neighbors[dir];
+            Vector2 arrival = dir switch
+            {
+                Door.Direction.Up => new Vector2(512, 480), Door.Direction.Down => new Vector2(512, 96),
+                Door.Direction.Left => new Vector2(704, 288), _ => new Vector2(320, 288)
+            };
+            EnterRoom(target, arrival);
+            _transitionQueued = false;
+        }
 
-		private void TogglePauseMenu()
-		{
-			if (IsInstanceValid(_activePauseMenu))
-			{
-				_activePauseMenu.QueueFree();
-				_activePauseMenu = null;
-				GetTree().Paused = false;
-				return;
-			}
+        private void EnterRoom(string id, Vector2 spawn)
+        {
+            if (IsInstanceValid(_current) && _current.IsInsideTree()) _roomContainer.RemoveChild(_current);
+            ClearProjectiles();
+            _player.GlobalPosition = spawn;
+            _player.Velocity = Vector2.Zero;
+            if (!_instances.TryGetValue(id, out var room))
+            {
+                room = new Room { Name = "DungeonRoom", Definition = _floor.Rooms[id], Floor = _floor };
+                _instances.Add(id, room);
+            }
+            _current = room;
+            // Cached Area2D nodes need a physics sync after the player's teleport.
+            // Ignore stale overlap signals from the room's previous activation.
+            _arrivalFrames = 3;
+            _roomContainer.AddChild(room);
+            _player.OnEnteredNewRoom();
+            Hud()?.HideBossHealthBar();
+            room.RefreshBossHud();
+            Discover(id, true);
+            foreach (var neighbor in room.Definition.Neighbors.Values) Discover(neighbor, false);
+            MapChanged?.Invoke();
+        }
 
-			// Spiel ist schon aus einem anderen Grund pausiert (Game Over /
-			// Sieg-Bildschirm) -> hier kein zusaetzliches Pause-Menu oeffnen.
-			if (GetTree().Paused)
-				return;
+        private void Discover(string id, bool visited)
+        {
+            if (!_map.TryGetValue(id, out var entry))
+            {
+                var data = _floor.Rooms[id];
+                entry = new MinimapRoomInfo { GridPosition = data.Position, Type = data.Kind };
+                _map.Add(id, entry);
+            }
+            entry.Visited |= visited;
+        }
 
-			// Kein aktiver Spielstand (z.B. man steht noch im Hauptmenue) ->
-			// Escape soll dort nichts tun.
-			if (!IsInstanceValid(_player))
-				return;
+        public void OnRoomCleared(Room room)
+        {
+            if (room != _current) return;
+            MapChanged?.Invoke();
+            if (room.Definition.Kind != RoomMapType.Boss || _floor.PortalOutcome.HasValue || _finished) return;
+            _floor.PortalOutcome = _floor.Zone == 1 && _exitRandom.NextDouble() < NextZoneChance;
+            if (_floor.PortalOutcome == true)
+            {
+                room.CreatePortal();
+                Hud()?.ShowItemPopup("Ein Portal ist erschienen!", "Betritt das Portal zu den Amethyst-Ruinen.", 5);
+            }
+            else FinishRun();
+        }
 
-			var instance = _pauseMenuScene.Instantiate<UI.PauseMenu>();
-			instance.Closed += () => _activePauseMenu = null;
-			GetTree().Root.AddChild(instance);
-			_activePauseMenu = instance;
-			GetTree().Paused = true;
-		}
+        public bool RequestNextZone(string roomId)
+        {
+            if (_transitionQueued || _arrivalFrames > 0 || _finished || GetTree().Paused || _floor.Zone != 1
+                || _floor.PortalOutcome != true || GetCurrentRoomId() != roomId
+                || !_current.IsCleared() || roomId != _floor.BossId) return false;
+            _transitionQueued = true;
+            CallDeferred(nameof(FinishNextZone));
+            return true;
+        }
 
-		// Wird einmal von Main.cs beim Start aufgerufen (auch bei jedem Neustart,
-		// da Main.tscn dann komplett neu geladen wird).
-		public void Initialize(Node roomContainer, Player.Player player)
-		{
-			_roomContainer = roomContainer;
-			_player = player;
+        private void FinishNextZone()
+        {
+            if (GetTree().Paused || _player.GetCurrentHealthHalfHearts() <= 0) { _transitionQueued = false; return; }
+            BeginZone(2);
+            _transitionQueued = false;
+        }
 
-			// Wichtig: Die alte Referenz stammt aus der vorherigen Szene und wurde
-			// beim Szenenwechsel bereits zerstoert. Ohne dieses Zuruecksetzen
-			// wuerde ChangeRoom() versuchen, ein bereits geloeschtes Objekt
-			// erneut freizugeben, was den Neustart (Retry) verhindert hat.
-			_currentRoomInstance = null;
+        private void FinishRun()
+        {
+            _finished = true;
+            GetTree().Paused = true;
+            var screen = GD.Load<PackedScene>("res://Scenes/UI/VictoryScreen.tscn").Instantiate();
+            screen.GetNode<Label>("CenterContainer/VBoxContainer/TitleLabel").Text = _floor.Zone == 2
+                ? "Die Amethyst-Ruinen sind befreit!" : "Die Aschekrypta ist bezwungen!";
+            GetTree().Root.AddChild(screen);
+        }
 
-			// Neuer Durchlauf -> kein Raum ist mehr "bereits geleert".
-			_clearedRoomPaths.Clear();
-			_collectedTreasurePaths.Clear();
-			_mapEntries.Clear();
-			_currentRoomScenePath = null;
-		}
+        private UI.HUD Hud() => GetTree().GetFirstNodeInGroup("hud") as UI.HUD;
+        private void ClearProjectiles()
+        {
+            foreach (var projectile in GetTree().GetNodesInGroup("projectiles"))
+            {
+                projectile.ProcessMode = ProcessModeEnum.Disabled;
+                if (projectile is Area2D area) { area.CollisionLayer = 0; area.CollisionMask = 0; }
+                projectile.QueueFree();
+            }
+        }
 
-		public bool IsRoomCleared(string scenePath)
-		{
-			return !string.IsNullOrEmpty(scenePath) && _clearedRoomPaths.Contains(scenePath);
-		}
-
-		public void MarkRoomCleared(string scenePath)
-		{
-			if (!string.IsNullOrEmpty(scenePath))
-			{
-				_clearedRoomPaths.Add(scenePath);
-			}
-		}
-
-		public bool IsTreasureCollected(string scenePath)
-		{
-			return !string.IsNullOrEmpty(scenePath) && _collectedTreasurePaths.Contains(scenePath);
-		}
-
-		public void MarkTreasureCollected(string scenePath)
-		{
-			if (!string.IsNullOrEmpty(scenePath))
-			{
-				_collectedTreasurePaths.Add(scenePath);
-			}
-		}
-
-		public void ChangeRoom(string scenePath, string spawnPointName, Door.Direction? arrivalDirection = null)
-		{
-			if (_roomContainer == null || _player == null)
-			{
-				GD.PrintErr("DungeonManager wurde nicht initialisiert.");
-				return;
-			}
-
-			if (_currentRoomInstance != null && IsInstanceValid(_currentRoomInstance))
-			{
-				_currentRoomInstance.QueueFree();
-			}
-			_currentRoomInstance = null;
-
-			var packedScene = GD.Load<PackedScene>(scenePath);
-			if (packedScene == null)
-			{
-				GD.PrintErr($"Raum-Szene nicht gefunden: {scenePath}");
-				return;
-			}
-
-			var instance = packedScene.Instantiate<Node2D>();
-			_roomContainer.AddChild(instance);
-			_currentRoomInstance = instance;
-
-			if (!string.IsNullOrEmpty(spawnPointName))
-			{
-				var spawnMarker = instance.GetNodeOrNull<Marker2D>(spawnPointName);
-				if (spawnMarker != null)
-				{
-					_player.GlobalPosition = spawnMarker.GlobalPosition;
-				}
-			}
-
-			RegisterVisitedRoom(scenePath, arrivalDirection);
-			_currentRoomScenePath = scenePath;
-
-			if (instance is Room room)
-			{
-				room.OnPlayerEntered(_player);
-				RegisterNeighbourRooms(room, scenePath);
-			}
-
-			MapChanged?.Invoke();
-		}
-
-		// ---------------------------------------------------------------
-		// Minimap: Gitterposition + Typ jeder Sala, automatisch aus den
-		// Door.DoorDirection-Werten abgeleitet.
-		// ---------------------------------------------------------------
-
-		public System.Collections.Generic.IReadOnlyDictionary<string, MinimapRoomInfo> GetMapEntries() => _mapEntries;
-		public string GetCurrentRoomScenePath() => _currentRoomScenePath;
-
-		private void RegisterVisitedRoom(string scenePath, Door.Direction? arrivalDirection)
-		{
-			if (!_mapEntries.TryGetValue(scenePath, out var entry))
-			{
-				Vector2I gridPosition = Vector2I.Zero;
-
-				if (arrivalDirection.HasValue
-					&& !string.IsNullOrEmpty(_currentRoomScenePath)
-					&& _mapEntries.TryGetValue(_currentRoomScenePath, out var fromEntry))
-				{
-					gridPosition = fromEntry.GridPosition + DirectionOffset(arrivalDirection.Value);
-				}
-
-				entry = new MinimapRoomInfo
-				{
-					GridPosition = gridPosition,
-					Type = InferRoomType(scenePath),
-				};
-				_mapEntries[scenePath] = entry;
-			}
-
-			entry.Visited = true;
-		}
-
-		// Sobald man eine Sala betritt, "sieht" man auch die Tueren zu ihren
-		// direkten Nachbarn - die werden als unbesuchte (graue) Eintraege
-		// aufgenommen, falls sie noch nicht bekannt sind.
-		private void RegisterNeighbourRooms(Room room, string roomScenePath)
-		{
-			if (!_mapEntries.TryGetValue(roomScenePath, out var selfEntry))
-				return;
-
-			var doorsContainer = room.GetNodeOrNull<Node>("Doors");
-			if (doorsContainer == null)
-				return;
-
-			foreach (Node child in doorsContainer.GetChildren())
-			{
-				if (child is Door door && !string.IsNullOrEmpty(door.TargetRoomScenePath) && !_mapEntries.ContainsKey(door.TargetRoomScenePath))
-				{
-					_mapEntries[door.TargetRoomScenePath] = new MinimapRoomInfo
-					{
-						GridPosition = selfEntry.GridPosition + DirectionOffset(door.DoorDirection),
-						Type = InferRoomType(door.TargetRoomScenePath),
-						Visited = false,
-					};
-				}
-			}
-		}
-
-		private static Vector2I DirectionOffset(Door.Direction direction)
-		{
-			return direction switch
-			{
-				Door.Direction.Up => new Vector2I(0, -1),
-				Door.Direction.Down => new Vector2I(0, 1),
-				Door.Direction.Left => new Vector2I(-1, 0),
-				Door.Direction.Right => new Vector2I(1, 0),
-				_ => Vector2I.Zero,
-			};
-		}
-
-		private static RoomMapType InferRoomType(string scenePath)
-		{
-			if (scenePath.Contains("StartRoom"))
-				return RoomMapType.Start;
-			if (scenePath.Contains("TreasureRoom"))
-				return RoomMapType.Treasure;
-			if (scenePath.Contains("BossRoom"))
-				return RoomMapType.Boss;
-			return RoomMapType.Normal;
-		}
-	}
+        // Read-only previews also let tests inspect hundreds of seeds without spawning enemies.
+        public Godot.Collections.Array<Godot.Collections.Dictionary> PreviewFloor(int seed, int zone)
+            => Snapshot(DungeonFloor.Generate(seed, zone));
+        public Godot.Collections.Array<Godot.Collections.Dictionary> GetFloorSnapshot() => Snapshot(_floor);
+        public Godot.Collections.Array<Godot.Collections.Dictionary> GetMapSnapshot()
+        {
+            var result = new Godot.Collections.Array<Godot.Collections.Dictionary>();
+            foreach (var pair in _map)
+                result.Add(new Godot.Collections.Dictionary { ["id"] = pair.Key,
+                    ["visited"] = pair.Value.Visited, ["position"] = pair.Value.GridPosition });
+            return result;
+        }
+        private static Godot.Collections.Array<Godot.Collections.Dictionary> Snapshot(DungeonFloor floor)
+        {
+            var result = new Godot.Collections.Array<Godot.Collections.Dictionary>();
+            if (floor == null) return result;
+            foreach (var room in floor.Rooms.Values)
+            {
+                var neighbors = new Godot.Collections.Dictionary();
+                foreach (var pair in room.Neighbors) neighbors[(int)pair.Key] = pair.Value;
+                result.Add(new Godot.Collections.Dictionary
+                {
+                    ["id"] = room.Id, ["position"] = room.Position, ["kind"] = room.Kind.ToString(),
+                    ["layout"] = room.Layout, ["neighbors"] = neighbors, ["cleared"] = room.Cleared,
+                    ["collected"] = room.TreasureCollected, ["item"] = room.ItemIndex,
+                    ["boss_scene"] = floor.BossScene
+                });
+            }
+            return result;
+        }
+    }
 }

@@ -8,16 +8,11 @@ namespace KleinesSpiel.Scripts.Rooms
 	//   aber nur wenn die Tuer offen ist.
 	public partial class Door : Node2D
 	{
-		// Welche Himmelsrichtung diese Tuer im Raum darstellt. Wird vom
-		// DungeonManager benutzt, um die Gitterposition jeder Sala fuer die
-		// Minimap zu berechnen (die Sala hinter einer "Up"-Tuer liegt direkt
-		// ueber der aktuellen, usw.) - unabhaengig vom Kartenlayout selbst,
-		// das weiterhin komplett ueber TargetRoomScenePath definiert wird.
-		public enum Direction { Up, Down, Left, Right }
-
-		[Export] public string TargetRoomScenePath = "";
-		[Export] public string SpawnPointName = "";
-		[Export] public Direction DoorDirection = Direction.Right;
+        public enum Direction { Up, Down, Left, Right }
+        [Export] public string TargetRoomId = "";
+        [Export] public string SourceRoomId = "";
+        [Export] public Direction DoorDirection = Direction.Right;
+        [Export] public RoomMapType TargetKind = RoomMapType.Normal;
 
 		private bool _isOpen;
 		private StaticBody2D _blocker;
@@ -83,6 +78,7 @@ namespace KleinesSpiel.Scripts.Rooms
 			var shape = new CollisionShape2D
 			{
 				Shape = _blockerShape.Shape,
+				Transform = _blockerShape.Transform,
 			};
 			projectileBlocker.AddChild(shape);
 		}
@@ -123,14 +119,29 @@ namespace KleinesSpiel.Scripts.Rooms
 				open ? new Color(0.4f, 1, 0.8f) : new Color(1, 0.7f, 0.3f), 18, 0.3f);
 		}
 
+        public override void _Draw()
+        {
+            if (TargetKind is not (RoomMapType.Treasure or RoomMapType.Boss)) return;
+            var inward = -(Vector2)DungeonFloor.Offsets[(int)DoorDirection] * 26;
+            Color color = TargetKind == RoomMapType.Treasure ? new Color(1, 0.8f, 0.3f) : new Color(1, 0.25f, 0.4f);
+            DrawCircle(inward, 7, new Color(0.05f, 0.05f, 0.1f));
+            DrawArc(inward, 7, 0, Mathf.Tau, 16, color, 1.5f);
+            if (TargetKind == RoomMapType.Treasure)
+            {
+                DrawLine(inward - Vector2.One * 3, inward + Vector2.One * 3, color, 2);
+                DrawLine(inward + new Vector2(-3,3), inward + new Vector2(3,-3), color, 2);
+            }
+            else { DrawCircle(inward + new Vector2(-2,-1), 1.5f, color); DrawCircle(inward + new Vector2(2,-1), 1.5f, color); }
+        }
+
 		private void OnBodyEntered(Node2D body)
 		{
 			if (!_isOpen)
 				return;
 
-			if (body is Player.Player && !string.IsNullOrEmpty(TargetRoomScenePath))
+			if (body is Player.Player && DungeonManager.Instance?.GetCurrentRoomId() == SourceRoomId)
 			{
-				DungeonManager.Instance?.ChangeRoom(TargetRoomScenePath, SpawnPointName, DoorDirection);
+				DungeonManager.Instance?.Travel((int)DoorDirection);
 			}
 		}
 	}

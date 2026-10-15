@@ -6,7 +6,7 @@
 
 [resource]
 script = ExtResource("1")
-ItemName = "Extra Herz"
+ItemName = "Herzmedaillon"
 EffectDescription = "Erhoeht deine maximale Lebensanzeige dauerhaft um ein ganzes Herz und heilt dich sofort um denselben Betrag."
 EffectType = 0
 EffectValue = 2.0

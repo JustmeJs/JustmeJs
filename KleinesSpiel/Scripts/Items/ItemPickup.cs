@@ -7,7 +7,7 @@ namespace KleinesSpiel.Scripts.Items
 		[Export] public ItemData Data;
 
 		// Wird ausgeloest, wenn der Spieler dieses Item tatsaechlich abholt.
-		// TreasureItemSpawner nutzt das, um den Raum als "schon abgeholt"
+		// Der Raum nutzt das, um das Item als "schon abgeholt"
 		// zu markieren, damit beim erneuten Betreten kein neues Item spawnt.
 		public event System.Action Collected;
 
@@ -21,14 +21,7 @@ namespace KleinesSpiel.Scripts.Items
 			var sprite = visualRoot?.GetNodeOrNull<Sprite2D>("Sprite");
 			if (sprite != null && Data?.Icon != null)
 				sprite.Texture = Data.Icon;
-			Common.VisualHelper.UseSpriteIfAssigned(visualRoot);
 
-			CallDeferred(nameof(PrintDebugInfo));
-		}
-
-		private void PrintDebugInfo()
-		{
-			GD.Print($"ItemPickup DEBUG: Pfad={GetPath()}, Visible={Visible}, GlobalPosition={GlobalPosition}, InTree={IsInsideTree()}");
 		}
 
 		private void OnBodyEntered(Node2D body)

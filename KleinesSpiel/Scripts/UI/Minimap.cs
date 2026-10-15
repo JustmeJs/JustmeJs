@@ -2,14 +2,7 @@ using Godot;
 
 namespace KleinesSpiel.Scripts.UI
 {
-	// Minimap oben links, im Stil von The Binding of Isaac: besuchte Raeume
-	// werden als farbiges Quadrat gezeichnet (Farbe je nach Raumtyp), nur
-	// bekannte (aber noch nicht betretene) Nachbarraeume als graues Quadrat,
-	// und der aktuelle Raum bekommt einen weissen Rahmen. Die Positionen
-	// kommen 1:1 aus DungeonManager.GetMapEntries() - das Gitter wird dort
-	// automatisch aus den Tuer-Richtungen aufgebaut, unabhaengig davon, ob
-	// der Dungeon rein linear ist oder (wie beim Schatzraum) nach oben/unten
-	// abzweigt.
+    // Visited rooms and discovered neighbors of the generated floor.
 	public partial class Minimap : Control
 	{
 		private const float CellSize = 16f;
@@ -52,7 +45,7 @@ namespace KleinesSpiel.Scripts.UI
 			if (entries.Count == 0)
 				return;
 
-			string currentPath = manager.GetCurrentRoomScenePath();
+			string currentPath = manager.GetCurrentRoomId();
 
 			// Begrenzung des bisher bekannten Gitters ermitteln, damit alles
 			// unabhaengig von negativen Koordinaten (z.B. eine Sala links vom

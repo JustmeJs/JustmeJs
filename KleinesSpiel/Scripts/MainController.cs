@@ -8,8 +8,6 @@ namespace KleinesSpiel.Scripts
 	{
 		[Export] public NodePath PlayerPath;
 		[Export] public NodePath RoomContainerPath;
-		[Export] public string StartRoomScenePath = "res://Scenes/Rooms/StartRoom.tscn";
-		[Export] public string StartSpawnPointName = "SpawnDefault";
 
 		public override void _Ready()
 		{
@@ -17,7 +15,7 @@ namespace KleinesSpiel.Scripts
 			var roomContainer = GetNode<Node>(RoomContainerPath);
 
 			Rooms.DungeonManager.Instance.Initialize(roomContainer, player);
-			Rooms.DungeonManager.Instance.ChangeRoom(StartRoomScenePath, StartSpawnPointName);
 		}
+        public override void _ExitTree() => Rooms.DungeonManager.Instance?.ForgetRun();
 	}
 }

@@ -5,6 +5,7 @@ namespace KleinesSpiel.Scripts.UI
 	public partial class HUD : CanvasLayer
 	{
 		private Label _healthLabel;
+        private Label _zoneLabel;
 		private Label _multiplierLabel;
 		private Label _itemPopupLabel;
 		private float _itemPopupTimer;
@@ -21,6 +22,9 @@ namespace KleinesSpiel.Scripts.UI
 			_bossHealthBar = GetNodeOrNull<ProgressBar>("BossHealthBar");
 			_bossHealthBarLabel = GetNodeOrNull<Label>("BossHealthBarLabel");
 			AddToGroup("hud");
+            _zoneLabel = new Label { Position = new Vector2(16, 300), Size = new Vector2(235, 90),
+                AutowrapMode = TextServer.AutowrapMode.WordSmart };
+            AddChild(_zoneLabel);
 		}
 
 		public override void _Process(double delta)
@@ -54,7 +58,8 @@ namespace KleinesSpiel.Scripts.UI
 				}
 			}
 
-			UpdateBossHealthBar();
+			_zoneLabel.Text = $"Zone {Rooms.DungeonManager.Instance.GetZoneIndex()}\n{Rooms.DungeonManager.Instance.GetZoneName()}";
+            UpdateBossHealthBar();
 		}
 
 		// Haelt die untere Boss-Lebensleiste (wie in TBOI) synchron mit dem
@@ -100,6 +105,13 @@ namespace KleinesSpiel.Scripts.UI
 				_bossHealthBarLabel.Text = bossName;
 			}
 		}
+
+        public void HideBossHealthBar()
+        {
+            _bossReference = null;
+            if (_bossHealthBar != null) _bossHealthBar.Visible = false;
+            if (_bossHealthBarLabel != null) _bossHealthBarLabel.Visible = false;
+        }
 
 		// Wird von ItemPickup.cs aufgerufen, wenn der Spieler ein Item einsammelt.
 		// Zeigt Name + Effekt fuer ein paar Sekunden an (wie in TBOI).

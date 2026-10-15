@@ -88,7 +88,6 @@ namespace KleinesSpiel.Scripts.Player
 			_currentHealthHalfHearts = MaxHealthHalfHearts;
 			_visual = GetNodeOrNull<Node2D>("Visual");
 			_animator = _visual as Common.ActorAnimator;
-			Common.VisualHelper.UseSpriteIfAssigned(_visual);
 			AddToGroup("player");
 		}
 

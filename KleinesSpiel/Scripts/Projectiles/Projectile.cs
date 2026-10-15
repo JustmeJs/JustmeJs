@@ -27,6 +27,7 @@ namespace KleinesSpiel.Scripts.Projectiles
 
 		public override void _Ready()
 		{
+			AddToGroup("projectiles");
 			_lifetimeTimer = LifetimeSeconds;
 			BodyEntered += OnBodyEntered;
 			AreaEntered += OnAreaEntered;

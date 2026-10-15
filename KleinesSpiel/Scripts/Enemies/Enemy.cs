@@ -44,7 +44,6 @@ namespace KleinesSpiel.Scripts.Enemies
 			CurrentHealth = MaxHealth;
 			_visual = GetNodeOrNull<Node2D>("Visual");
 			_animator = _visual as Common.ActorAnimator;
-			Common.VisualHelper.UseSpriteIfAssigned(_visual);
 			AddToGroup("enemies");
 		}
 
@@ -163,7 +162,7 @@ namespace KleinesSpiel.Scripts.Enemies
 
 		// Wuerfelt anhand von HeartDropChance, ob ein Herz liegen bleibt,
 		// und spawnt es an der Todesposition dieses Gegners. Nutzt dieselbe
-		// CallDeferred-Absicherung wie TreasureItemSpawner: der Elternknoten
+		// CallDeferred-Absicherung: der Elternknoten
 		// koennte in seltenen Faellen gerade selbst am Aufbauen sein.
 		private void TrySpawnHeartDrop()
 		{

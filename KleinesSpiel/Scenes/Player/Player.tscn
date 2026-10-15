@@ -27,13 +27,6 @@ animation = &"idle_down"
 autoplay = "idle_down"
 scale = Vector2(0.18181818, 0.18181818)
 
-[node name="Placeholder" type="ColorRect" parent="Visual"]
-visible = false
-offset_left = -16.0
-offset_top = -16.0
-offset_right = 16.0
-offset_bottom = 16.0
-color = Color(0.2, 0.6, 1, 1)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 enabled = false

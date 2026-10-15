@@ -25,8 +25,3 @@ IsHeart = false
 [node name="Sprite" type="Sprite2D" parent="Visual"]
 texture = ExtResource("art")
 scale = Vector2(0.12759171, 0.12759171)
-
-[node name="Placeholder" type="Polygon2D" parent="Visual"]
-visible = false
-color = Color(1, 0.85, 0.1, 1)
-polygon = PackedVector2Array(-20, -20, 20, -20, 20, 20, -20, 20)

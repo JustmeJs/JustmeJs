@@ -6,7 +6,7 @@
 
 [resource]
 script = ExtResource("1")
-ItemName = "Scharfe Muenze"
+ItemName = "Rubinklinge"
 EffectDescription = "Der Schaden all deiner Projektile steigt dauerhaft um 25% - Gegner sterben in weniger Treffern."
 EffectType = 3
 EffectValue = 25.0

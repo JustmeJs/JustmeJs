@@ -17,8 +17,6 @@ namespace KleinesSpiel.Scripts.Items
 		{
 			BodyEntered += OnBodyEntered;
 
-			var visualRoot = GetNodeOrNull<Node>("Visual");
-			Common.VisualHelper.UseSpriteIfAssigned(visualRoot);
 
 		}
 

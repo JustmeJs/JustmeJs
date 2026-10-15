@@ -31,11 +31,3 @@ sprite_frames = ExtResource("art")
 animation = &"idle"
 autoplay = "idle"
 scale = Vector2(0.40625000, 0.40625000)
-
-[node name="Placeholder" type="ColorRect" parent="Visual"]
-visible = false
-offset_left = -32.0
-offset_top = -32.0
-offset_right = 32.0
-offset_bottom = 32.0
-color = Color(0.9, 0.1, 0.4, 1)

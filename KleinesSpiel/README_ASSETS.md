@@ -1,76 +1,92 @@
-# Kleines Spiel — assets y animaciones
+# Kleines Spiel — mazmorras, assets y animaciones
 
 ## Abrir y jugar
 
-1. Descarga y extrae el ZIP nuevo en una carpeta vacía, conservando las subcarpetas.
-2. Importa `KleinesSpiel/project.godot` con **Godot 4.3 .NET** y **.NET SDK 8** instalados. La edición estándar de Godot no ejecuta C#.
-3. Compila con Build del editor o `dotnet build` desde la carpeta del proyecto.
-4. Pulsa **F5** y después **Spielen**.
+1. Extrae el ZIP en una carpeta vacía conservando sus subcarpetas.
+2. Importa `KleinesSpiel/project.godot` con **Godot 4.3 .NET** y **.NET SDK 8**. La edición estándar no ejecuta C#.
+3. Compila con Build del editor o `dotnet build` desde esta carpeta.
+4. Pulsa **F5** y selecciona **Spielen**.
 
-WASD: movimiento. Flechas: disparo. Espacio: dash. Escape: pausa. Se mantienen los textos del juego en alemán.
+WASD: movimiento. Flechas: disparo. Espacio: dash. Escape: pausa. La interfaz mantiene el alemán del proyecto original.
 
-## Animaciones integradas
+## Estructura de una partida
 
-Los ocho personajes (héroe, tres enemigos y cuatro variantes de jefe) usan ahora `AnimatedSprite2D` y fotogramas distintos, en lugar de un sprite fijo. El mago usa un atlas nuevo de 32 poses, con vistas hacia abajo, arriba, izquierda y derecha; los enemigos y jefes mantienen su atlas de animación.
+Cada zona genera un árbol conectado de 12 habitaciones dentro de una cuadrícula de 5 × 5: una inicial, ocho de combate, dos de tesoro y una de jefe. Hay conexiones arriba, abajo, izquierda y derecha. El jefe ocupa una de las hojas más alejadas de la entrada; los tesoros también están en extremos. Los enemigos bloquean las salidas hasta que todos han sido derrotados.
 
-| Elemento | Animación y activación |
-| --- | --- |
-| Héroe | Vara mágica, respiración, pasos, lanzamiento de hechizos, daño, dash y derrota en cuatro direcciones. La animación sigue la dirección del disparo aunque el personaje se mueva en sentido contrario. |
-| Enemigos y jefes | Reposo, desplazamiento, ataque al disparar o al hacer contacto, reacción al daño y caída al morir. Los vigilantes también flotan. |
-| Cinco mejoras | Flotación, oscilación, brillo y ascenso/desvanecimiento al recogerlas. Cada una conserva su icono. |
-| Corazón | Latido y flotación; destello y desaparición al recogerlo. |
-| Proyectiles | Pulso durante el vuelo, rastro y explosión de impacto o al agotarse su duración. |
-| Puertas | Apertura/cierre gradual de la reja y destello, con inversión fluida si cambia el estado durante la transición. |
-| Mazmorra | Antorchas con llamas, chispas y luz oscilante; el suelo y las paredes conservan su geometría fija. |
-| Interfaz | Latido de corazones, sacudida al perder vida, héroe animado en el menú, entrada gradual de pantallas y botones que reaccionan al cursor o al foco del teclado. |
+Las ocho salas de combate usan seis distribuciones de obstáculos, barajadas para que las seis aparezcan en cada zona. También varían la selección y posición de los enemigos. Los puntos de aparición evitan los obstáculos y la entrada del jugador. El minimapa muestra la sala actual y las adyacentes descubiertas.
 
-El mago tiene fotogramas propios de frente, espalda y ambos perfiles: no se usa un reflejo de la misma pose para todos los disparos. Los enemigos mantienen sus poses frontales con volteo horizontal. El héroe lanza los proyectiles existentes con la vara y conserva sus estadísticas de combate.
+Las salas se conservan durante la visita a una zona: volver no regenera enemigos ni tesoros recogidos, y mantiene los corazones que hayan quedado en el suelo. Los proyectiles se eliminan al cambiar de habitación. Se descartan las salas antiguas al cambiar de zona, reiniciar o salir al menú.
 
-## Vara mágica y dirección del disparo
+Al vencer al primer jefe se decide una sola vez si aparece un portal: **70 % por defecto**. Si aparece, la partida continúa al entrar en él; conserva jugador, vida y mejoras. Las Ruinas de Amatista generan otras 12 habitaciones, cambian la paleta y aumentan la dificultad. Cada zona elige entre dos variantes de jefe; los conjuntos son distintos, de modo que el jefe final no repite el primero. Sin portal, vencer al primer jefe termina en victoria. Vencer al jefe de la segunda zona siempre termina la partida.
 
-`ActorAnimator` resuelve nombres como `attack_up`, `walk_left` e `idle_right` cuando existen. Cambia la animación también al cambiar de dirección dentro del mismo estado. La pose del lanzamiento conserva la dirección del proyectil, incluso al retroceder, y se reinicia en cada disparo. Los recursos sin vistas direccionales siguen usando sus animaciones originales.
+El autoload `DungeonManager` expone `NextZoneChance` (0–1) y `SeedOverride` (0 = semilla aleatoria). La semilla controla el mapa, sus contenidos, los objetos y la tirada del portal. Los corazones soltados por enemigos mantienen su tirada independiente.
 
-El proyectil y el destello aparecen en la punta de la vara, mediante los valores `CastOffsetDown`, `CastOffsetUp`, `CastOffsetLeft` y `CastOffsetRight` del jugador. Los valores se ajustaron a la pose de lanzamiento; `ToGlobal` conserva la alineación al mover o escalar el personaje.
+![Variantes y conexiones de las habitaciones](Documentation/dungeon_rooms.png)
 
-## Estados y comportamiento
+![Portal después del primer jefe](Documentation/zone_portal.png)
 
-`ActorAnimator` selecciona: **muerte > daño > dash > ataque > movimiento > reposo**. Los estados breves vuelven automáticamente al movimiento o al reposo. Los ataques repetidos reinician la preparación.
+![Segunda zona](Documentation/zone_two_combat.png)
 
-Al morir un enemigo, sus colisiones y comportamiento se desactivan inmediatamente. Su evento de derrota se emite una vez y la presentación se elimina a los 0,55 segundos. La animación final puede terminar cuando el juego muestra Victoria o Game Over y está pausado. Las animaciones de los personajes vivos se congelan al pausar.
+## Objetos pasivos
 
-La recogida aplica la mejora o curación una sola vez, desactiva la detección y termina su efecto visual antes de eliminar el objeto. Las estelas y efectos tienen una duración limitada. No quedan tweens de recogida apuntando a objetos destruidos.
+Cada partida baraja los cinco objetos y reparte dos por zona sin repetición. El icono mostrado procede del propio `ItemData`, igual que la mejora aplicada y el texto de recogida.
 
-## Archivos y edición
+| Icono | Nombre en el juego | Efecto |
+| --- | --- | --- |
+| Medallón de corazón | Herzmedaillon | +1 corazón máximo completo y curación de esa cantidad. |
+| Bota alada | Gefluegelter Stiefel | +15 % de velocidad de movimiento. |
+| Reloj de arena | Sanduhr des Zaubers | −20 % de espera entre disparos. |
+| Hoja de rubí | Rubinklinge | +25 % de daño de los proyectiles. |
+| Punta de lanza | Durchdringende Spitze | Los proyectiles atraviesan un enemigo adicional. |
 
-- `Assets/Sprites/hero_mage_directional.png`: atlas del mago con vara, generado con IA, con ocho poses para cada dirección. `hero_mage_manifest.json` documenta regiones, márgenes y origen del disparo.
-- `Assets/Sprites/characters_animated.png`: atlas de enemigos y jefes. Su primera fila del héroe anterior se conserva como material anterior y no se usa en el jugador.
-- `Resources/Animations/*_frames.tres`: recursos SpriteFrames editables en Godot. Ajusta sus velocidades o fotogramas desde el Inspector.
-- `Assets/Sprites/animation_manifest.json`: regiones del atlas y secuencias utilizadas. Las regiones se ajustan a las filas del dibujo y usan márgenes para mantener un lienzo de 192 × 192.
-- `Scripts/Common/ActorAnimator.cs`: transiciones y presentación del personaje. Los efectos no cambian la forma de sus colisiones.
-- `Scripts/Effects/BurstEffect.cs`: destellos, partículas y estela del dash, con limpieza automática.
-- `Scripts/Items/PickupMotion.cs`: animación de objetos y corazones.
-- `Assets/Sprites/Tiles/door_transition.gdshader`: transición de puertas; cada puerta tiene su propio material.
-- `Scripts/Rooms/RoomArt.cs`: paredes a partir de colisiones y antorchas animadas.
-- `Scripts/UI/MenuHero.cs`, `MenuMotion.cs` y `HealthIcons.cs`: animación de la interfaz.
+![Iconos y efectos](Documentation/passive_items.png)
 
-El atlas anterior `dungeon_atlas.png` sigue proporcionando iconos y proyectiles. Los gráficos originales aportados en el ZIP se conservan. No se atribuye una licencia nueva a esos archivos originales ni se usaron packs comerciales.
+La hoja y la punta representan mejoras pasivas; el arma que lleva el personaje sigue siendo su vara mágica.
 
-## Pruebas
+## Animaciones
 
-- `dotnet build`: 0 errores y 0 advertencias con SDK 8.0.426.
-- **180 comprobaciones de integración**, tanto sin ventana como con renderizado OpenGL en Godot 4.3 .NET.
-- Se verifican transiciones y avance de fotogramas de todos los personajes, disparos reales de enemigos/jefes, contacto cuerpo a cuerpo, pausa, muerte sin combate residual, recogida única, limpieza de efectos de recogida, vuelo y expiración de proyectiles, transición y reversión de puertas y foco del menú.
-- **72 comprobaciones adicionales del mago**, sin ventana y con renderizado OpenGL: cuatro animaciones de disparo distintas, dirección y origen de los proyectiles, movimiento al retroceder, retorno al reposo, cambios rápidos de orientación y locomoción direccional.
-- Inspección de una grabación renderizada por Godot. `Documentation/mage_casting_preview.gif` muestra disparos reales en cuatro direcciones con el jugador ampliado para ver la vara. `Documentation/animations_preview.gif` muestra una galería de animaciones en poses controladas; no representa una partida ni un encuentro aleatorio.
-- El ZIP incluye las entradas de carpetas necesarias para el importador de Godot. Se comprueba su extracción y se excluyen cachés `.godot`, metadatos `.import` regenerables y compilados.
+Los ocho personajes usan `AnimatedSprite2D`. El mago tiene 32 poses en cuatro direcciones para reposo, movimiento, lanzamiento, daño, dash y derrota. `ActorAnimator` mantiene la dirección del lanzamiento aunque camines en otra dirección; los proyectiles y destellos aparecen en la punta de la vara usando los cuatro valores `CastOffset` del jugador. Los enemigos y jefes mantienen sus poses frontales con volteo horizontal.
 
-Para ejecutar la prueba desde esta carpeta con el ejecutable de Godot .NET en PATH:
+La prioridad de estados es muerte, daño, dash, ataque, movimiento y reposo. Al morir un enemigo se desactiva su combate y su evento de derrota se emite una vez. Su presentación permanece brevemente para terminar la caída, incluso al mostrarse la victoria. Los personajes vivos se congelan al pausar.
+
+Los objetos flotan, oscilan y brillan; al recogerlos aplican el efecto una sola vez y desaparecen con una animación. Los proyectiles tienen pulso, estela e impacto. Las puertas animan apertura y cierre, el portal gira y emite chispas, las antorchas parpadean y la interfaz anima corazones, menús y botones.
+
+[Disparos del mago](Documentation/mage_casting_preview.gif) · [Galería de animaciones](Documentation/animations_preview.gif) · [Recorrido de mazmorra](Documentation/roguelike_preview.gif)
+
+Las galerías usan poses o encuentros controlados para mostrar el contenido; no son una partida ganada sin asistencia.
+
+## Organización y limpieza
+
+- `Scripts/Rooms/DungeonFloor.cs`: datos, semilla, generación del grafo y elección de habitaciones/jefe.
+- `DungeonManager.cs`: partida, conservación de salas, puertas, minimapa y progresión entre zonas.
+- `Room.cs` y `RoomLayouts.cs`: construcción de paredes, obstáculos, puertas, enemigos y tesoros.
+- `RoomArt.cs` y `ZonePortal.cs`: presentación de las zonas y portal interactivo.
+- `Scripts/Items/ItemCatalog.cs` y `Resources/Items/`: catálogo de mejoras e iconos.
+- `Assets/Sprites/hero_mage_directional.png` y `hero_mage_manifest.json`: atlas del mago y regiones de las poses.
+- `Assets/Sprites/characters_animated.png` y `Resources/Animations/`: atlas y secuencias de enemigos/jefes.
+- `Assets/Sprites/dungeon_atlas.png`: iconos y proyectiles activos.
+- `Scripts/Common/ActorAnimator.cs`, `Scripts/Effects/`, `Scripts/Items/PickupMotion.cs`: animación y efectos.
+- `Assets/Sprites/Tiles/door_transition.gdshader`: transición de la reja.
+
+Se eliminaron los tres PNG originales de reemplazo, su recurso de animación, siete recursos gráficos estáticos sustituidos, dos manifiestos obsoletos, las ocho escenas del recorrido fijo y sus utilidades sin uso. Los atlas compartidos se mantienen completos porque sus regiones activas siguen utilizándose. Las imágenes de `Documentation/` son material de referencia, no se cargan durante el juego.
+
+No se atribuye una licencia nueva a los archivos originales ni se utilizaron packs comerciales. El atlas direccional del mago fue generado con IA en la revisión anterior.
+
+## Validación
+
+Desde esta carpeta, con Godot **.NET** y .NET SDK 8 en PATH:
 
 ```sh
 dotnet build
 godot --headless --editor --path . --quit
+godot --headless --fixed-fps 60 --path . --script res://Tests/RoguelikeSmoke.gd
 godot --headless --fixed-fps 60 --path . --script res://Tests/AnimationSmoke.gd
 godot --headless --fixed-fps 60 --path . --script res://Tests/MageCastingSmoke.gd
 ```
 
-No se verificó una partida completa hasta derrotar al jefe.
+- `RoguelikeSmoke`: 1.461 comprobaciones. Genera 400 mapas y verifica conexión, puertas recíprocas, límites, variedad, tesoros y jefes. Prueba cruce físico de puertas en cuatro direcciones y bloqueo durante combate. Recorre ambas zonas con daño de prueba, recoge cuatro mejoras distintas, vuelve a salas anteriores y comprueba conservación de estado, limpieza, entrada real al portal, jefe diferente, victoria y reinicio. Cubre también la rama sin portal.
+- `AnimationSmoke`: 180 comprobaciones de animaciones, combate, recogida única, pausa, efectos y puertas.
+- `MageCastingSmoke`: 72 comprobaciones de las cuatro direcciones, origen de disparos y movimiento independiente.
+- `python3 Tools/audit_assets.py`, desde la raíz del repositorio: verifica referencias, recursos gráficos sin uso y cinco iconos/efectos diferentes.
+
+El paquete excluye `.godot`, `.import` regenerables y compilados. Incluye entradas explícitas de carpetas para el importador de Godot. Antes de distribuirlo se comprueban la extracción y compilación de una copia limpia del ZIP.

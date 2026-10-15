@@ -6,7 +6,7 @@
 
 [resource]
 script = ExtResource("1")
-ItemName = "Schnelle Schuhe"
+ItemName = "Gefluegelter Stiefel"
 EffectDescription = "Deine Laufgeschwindigkeit steigt dauerhaft um 15% - du bewegst dich spuerbar schneller durch die Raeume und weichst leichter aus."
 EffectType = 1
 EffectValue = 15.0

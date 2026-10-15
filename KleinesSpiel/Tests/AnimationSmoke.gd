@@ -169,9 +169,8 @@ func run() -> void:
   await frames(12)
   verify(not is_instance_valid(projectile), name + " expires and cleans up")
 
- var room = load("res://Scenes/Rooms/StartRoom.tscn").instantiate()
- game.add_child(room)
- var door = room.get_node("Doors/DoorRight")
+ var room = root.get_node("DungeonManager").GetCurrentRoom()
+ var door = room.get_node("Doors").get_child(0)
  door.SetClosed()
  await frames(22)
  var material: ShaderMaterial = door.get_node("DoorSprite").material
@@ -188,7 +187,6 @@ func run() -> void:
  door.SetOpen()
  await frames(22)
  verify(is_equal_approx(material.get_shader_parameter("openness"), 1), "Door reverses without a stale tween")
- room.queue_free()
  await frames(3)
 
  var melee = load("res://Scenes/Enemies/EnemyMelee.tscn").instantiate()
