@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Items/ItemData.cs" id="1"]
+
+[ext_resource type="Texture2D" path="res://Resources/Art/spear.tres" id="art"]
+
+[resource]
+script = ExtResource("1")
+ItemName = "Durchdringender Blick"
+EffectDescription = "Deine Projektile durchschlagen ab sofort einen zusaetzlichen Gegner, bevor sie verschwinden - ideal wenn mehrere Gegner in einer Reihe stehen."
+EffectType = 4
+EffectValue = 1.0
+Icon = ExtResource("art")

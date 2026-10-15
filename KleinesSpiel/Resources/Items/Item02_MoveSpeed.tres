@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Items/ItemData.cs" id="1"]
+
+[ext_resource type="Texture2D" path="res://Resources/Art/winged_boot.tres" id="art"]
+
+[resource]
+script = ExtResource("1")
+ItemName = "Schnelle Schuhe"
+EffectDescription = "Deine Laufgeschwindigkeit steigt dauerhaft um 15% - du bewegst dich spuerbar schneller durch die Raeume und weichst leichter aus."
+EffectType = 1
+EffectValue = 15.0
+Icon = ExtResource("art")

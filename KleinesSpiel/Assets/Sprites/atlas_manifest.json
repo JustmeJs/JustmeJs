@@ -1,0 +1,172 @@
+{
+  "image": "res://Assets/Sprites/dungeon_atlas.png",
+  "size": [
+    1254,
+    1254
+  ],
+  "columns": 4,
+  "rows": 4,
+  "origin": "Generated with OpenAI image generation for this project",
+  "sprites": [
+    {
+      "name": "hero",
+      "region": [
+        0.0,
+        0.0,
+        313.5,
+        313.5
+      ],
+      "resource": "res://Resources/Art/hero.tres"
+    },
+    {
+      "name": "imp",
+      "region": [
+        313.5,
+        0.0,
+        313.5,
+        313.5
+      ],
+      "resource": "res://Resources/Art/imp.tres"
+    },
+    {
+      "name": "archer",
+      "region": [
+        627.0,
+        0.0,
+        313.5,
+        313.5
+      ],
+      "resource": "res://Resources/Art/archer.tres"
+    },
+    {
+      "name": "watcher",
+      "region": [
+        940.5,
+        0.0,
+        313.5,
+        313.5
+      ],
+      "resource": "res://Resources/Art/watcher.tres"
+    },
+    {
+      "name": "demon_boss",
+      "region": [
+        0.0,
+        313.5,
+        313.5,
+        313.5
+      ],
+      "resource": "res://Resources/Art/demon_boss.tres"
+    },
+    {
+      "name": "ogre_boss",
+      "region": [
+        313.5,
+        313.5,
+        313.5,
+        313.5
+      ],
+      "resource": "res://Resources/Art/ogre_boss.tres"
+    },
+    {
+      "name": "archer_boss",
+      "region": [
+        627.0,
+        313.5,
+        313.5,
+        313.5
+      ],
+      "resource": "res://Resources/Art/archer_boss.tres"
+    },
+    {
+      "name": "watcher_boss",
+      "region": [
+        940.5,
+        313.5,
+        313.5,
+        313.5
+      ],
+      "resource": "res://Resources/Art/watcher_boss.tres"
+    },
+    {
+      "name": "heart",
+      "region": [
+        0.0,
+        627.0,
+        313.5,
+        313.5
+      ],
+      "resource": "res://Resources/Art/heart.tres"
+    },
+    {
+      "name": "winged_boot",
+      "region": [
+        313.5,
+        627.0,
+        313.5,
+        313.5
+      ],
+      "resource": "res://Resources/Art/winged_boot.tres"
+    },
+    {
+      "name": "hourglass",
+      "region": [
+        627.0,
+        627.0,
+        313.5,
+        313.5
+      ],
+      "resource": "res://Resources/Art/hourglass.tres"
+    },
+    {
+      "name": "ruby_sword",
+      "region": [
+        940.5,
+        627.0,
+        313.5,
+        313.5
+      ],
+      "resource": "res://Resources/Art/ruby_sword.tres"
+    },
+    {
+      "name": "spear",
+      "region": [
+        0.0,
+        940.5,
+        313.5,
+        313.5
+      ],
+      "resource": "res://Resources/Art/spear.tres"
+    },
+    {
+      "name": "player_bolt",
+      "region": [
+        313.5,
+        940.5,
+        313.5,
+        313.5
+      ],
+      "resource": "res://Resources/Art/player_bolt.tres"
+    },
+    {
+      "name": "enemy_bolt",
+      "region": [
+        627.0,
+        940.5,
+        313.5,
+        313.5
+      ],
+      "resource": "res://Resources/Art/enemy_bolt.tres"
+    },
+    {
+      "name": "heart_medallion",
+      "region": [
+        940.5,
+        940.5,
+        313.5,
+        313.5
+      ],
+      "resource": "res://Resources/Art/heart_medallion.tres"
+    }
+  ]
+}

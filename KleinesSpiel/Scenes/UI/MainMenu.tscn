@@ -1,0 +1,54 @@
+[gd_scene load_steps=5 format=3 uid="uid://main_menu_scene"]
+
+[ext_resource type="Script" path="res://Scripts/UI/MainMenu.cs" id="1"]
+
+[ext_resource type="Theme" path="res://Resources/Art/dungeon_theme.tres" id="theme"]
+[ext_resource type="Texture2D" path="res://Resources/Art/hero.tres" id="hero"]
+[ext_resource type="Texture2D" path="res://Assets/Sprites/Tiles/stone_floor.svg" id="stone"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+theme = ExtResource("theme")
+
+[node name="Background" type="TextureRect" parent="."]
+texture = ExtResource("stone")
+stretch_mode = 1
+mouse_filter = 2
+modulate = Color(0.45, 0.48, 0.6, 1)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="HeroArt" type="TextureRect" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(112, 112)
+texture = ExtResource("hero")
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 40
+text = "Kleines Spiel"
+
+[node name="PlayButton" type="Button" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 50)
+text = "Spielen"

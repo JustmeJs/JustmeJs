@@ -1,0 +1,28 @@
+[gd_scene load_steps=4 format=3 uid="uid://item_pickup_scene"]
+
+[ext_resource type="Script" path="res://Scripts/Items/ItemPickup.cs" id="1"]
+
+[ext_resource type="Texture2D" path="res://Resources/Art/heart_medallion.tres" id="art"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(40, 40)
+
+[node name="ItemPickup" type="Area2D"]
+collision_layer = 32
+collision_mask = 2
+z_index = 10
+script = ExtResource("1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="Sprite" type="Sprite2D" parent="Visual"]
+texture = ExtResource("art")
+scale = Vector2(0.12759171, 0.12759171)
+
+[node name="Placeholder" type="Polygon2D" parent="Visual"]
+visible = false
+color = Color(1, 0.85, 0.1, 1)
+polygon = PackedVector2Array(-20, -20, 20, -20, 20, 20, -20, 20)

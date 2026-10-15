@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=3 uid="uid://enemy_ranged_scene"]
+
+[ext_resource type="Script" path="res://Scripts/Enemies/EnemyRanged.cs" id="1"]
+[ext_resource type="PackedScene" path="res://Scenes/Projectiles/EnemyProjectile.tscn" id="2"]
+
+[ext_resource type="Texture2D" path="res://Resources/Art/archer.tres" id="art"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(28, 28)
+
+[node name="EnemyRanged" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("1")
+MaxHealth = 3.0
+MoveSpeed = 75.0
+ContactDamageHalfHearts = 1
+ProjectileScene = ExtResource("2")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="Sprite" type="Sprite2D" parent="Visual"]
+texture = ExtResource("art")
+scale = Vector2(0.12759171, 0.12759171)
+
+[node name="Placeholder" type="ColorRect" parent="Visual"]
+visible = false
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
+color = Color(0.8, 0.5, 0.1, 1)
