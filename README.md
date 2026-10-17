@@ -1,42 +1,46 @@
 # Kleines Spiel
 
-Roguelike 2D en Godot y C#: explora mazmorras ramificadas, recoge mejoras y derrota a sus jefes con un mago y su vara.
+Roguelike 2D en Godot y C#: un mago con vara explora una cripta, asciende al castillo y se enfrenta al Regente.
 
 ## Descargar y jugar
 
 **[Descargar KleinesSpiel_con_assets.zip](https://github.com/JustmeJs/JustmeJs/raw/refs/heads/main/KleinesSpiel_con_assets.zip)**
 
-Extrae el ZIP en una carpeta vacía e importa `KleinesSpiel/project.godot` con **Godot 4.3 .NET** y **.NET SDK 8**. Compila, pulsa **F5** y selecciona **Spielen**. Es el proyecto editable; para ejecutarlo necesitas Godot .NET.
+Extrae el ZIP en una carpeta nueva e importa `KleinesSpiel/project.godot` con **Godot 4.3 .NET** y **.NET SDK 8**. Compila, pulsa **F5** y selecciona **Play**.
 
-Controles: WASD para moverse, flechas para disparar, espacio para dash y Escape para pausar. La interfaz del juego está en alemán.
+- Juego: WASD para moverse, flechas para disparar, espacio para dash y Escape para pausar.
+- Todos los menús: flechas para seleccionar y **Enter o Espacio** para confirmar; también admiten ratón.
+- Idioma: inglés predeterminado. El botón **Language: English / Sprache: Deutsch** del menú principal cambia el idioma y guarda la elección entre sesiones.
 
-## Mazmorras y progresión
+![Menú con selección por teclado e idioma](KleinesSpiel/Documentation/menu_english.png)
 
-Cada zona genera un mapa de **12 habitaciones conectadas en las cuatro direcciones**, con bifurcaciones, dos tesoros y un jefe al final de un camino largo. Las salas de combate eligen entre **seis distribuciones** de obstáculos y combinaciones de enemigos. Las puertas se abren al terminar el combate; el minimapa revela las salas descubiertas. Al regresar, se conserva lo que has limpiado o recogido.
+## De la cripta al castillo
 
-Después del primer jefe hay un **70 % de probabilidad** de que aparezca un portal a las **Ruinas de Amatista**, una segunda mazmorra con otro mapa, otro aspecto y un jefe final distinto. Conservas vida y mejoras. Si no aparece el portal, ganas al completar la primera zona; el jefe de la segunda cierra la partida cuando sí aparece.
+La partida tiene **seis niveles**: tres de cripta y tres de castillo. Cada nivel genera **12 habitaciones** conectadas en las cuatro direcciones, con bifurcaciones, seis distribuciones de obstáculos y enemigos variados. El minimapa revela las habitaciones descubiertas; las salas limpiadas y los objetos recogidos conservan su estado al regresar.
 
-![Recorrido por salas, tesoro, portal y segunda zona](KleinesSpiel/Documentation/roguelike_preview.gif)
+Hay **exactamente un objeto pasivo por nivel**, elegido sin repetir entre las seis mejoras. Después de cada uno de los cinco primeros jefes aparece siempre un portal al siguiente nivel. El tercer portal conduce al castillo, con suelo de mármol, alfombras, estandartes y ventanas. Mantienes vida y mejoras al avanzar.
 
-La vista previa usa una semilla fija y derrotas controladas para mostrar el recorrido y los dos entornos.
+En el sexto nivel espera **The Castle Regent**, un jefe de 140 puntos de vida con abanicos de proyectiles, anillos con una abertura para esquivar y embestidas que avisan de su dirección. Por debajo de la mitad de vida intensifica sus ataques. Derrotarlo completa la partida.
 
-## Objetos pasivos y combate
+![Recorrido por los seis niveles y jefe final](KleinesSpiel/Documentation/roguelike_preview.gif)
 
-Cada mejora tiene un icono propio que representa su efecto. Las dos salas de tesoro de cada zona eligen objetos al azar, sin repetirlos en la misma partida.
+La vista previa usa encuentros y derrotas controladas para mostrar la progresión.
 
-![Los cinco objetos y sus mejoras](KleinesSpiel/Documentation/passive_items.png)
+## Objetos y combate
 
-El mago tiene animaciones direccionales de movimiento y lanzamiento: la vara apunta hacia el disparo aunque camines hacia otro lado. Enemigos, jefes, objetos, proyectiles, puertas e interfaz también están animados.
+![Seis mejoras pasivas](KleinesSpiel/Documentation/passive_items.png)
 
-[Ver disparos en cuatro direcciones](KleinesSpiel/Documentation/mage_casting_preview.gif) · [Galería de animaciones](KleinesSpiel/Documentation/animations_preview.gif)
+Los enemigos cuerpo a cuerpo retroceden y se recuperan brevemente después del contacto, dejando espacio para escapar. Los golpes bloqueados por invulnerabilidad no vuelven a empujar al jugador. La embestida del jefe final termina cuando choca.
 
-Se retiraron los sprites originales sin uso, los recursos estáticos sustituidos y las escenas del antiguo recorrido fijo. La auditoría comprueba las referencias de los gráficos conservados y los cinco iconos pasivos distintos.
+El mago apunta la vara en la dirección del disparo aunque camines hacia otro lado. Personajes, objetos, proyectiles, puertas y menús tienen animaciones.
 
-## Desarrollo y validación
+[Disparos en cuatro direcciones](KleinesSpiel/Documentation/mage_casting_preview.gif) · [Galería de animaciones](KleinesSpiel/Documentation/animations_preview.gif)
 
-Compilación con .NET 8 y pruebas en Godot 4.3 .NET: generación de 400 mapas, tránsito físico por puertas, recorrido de ambas zonas, conservación de objetos y salas, portal, victoria, reinicio, animaciones y disparos direccionales.
+## Desarrollo y comprobaciones
 
 [Documentación de implementación y pruebas](KleinesSpiel/README_ASSETS.md)
+
+Las pruebas automatizadas cubren 1.200 mapas generados, un recorrido de los seis niveles, navegación real con teclado, ambos idiomas y su persistencia, separación de enemigos melee, los tres ataques del jefe final y las animaciones existentes.
 
 Desde la raíz del repositorio:
 
@@ -45,4 +49,4 @@ python3 Tools/audit_assets.py
 python3 Tools/package_project.py
 ```
 
-El empaquetador usa los archivos del proyecto incluidos en el índice de Git. El ZIP contiene entradas explícitas de carpetas para el importador de Godot y excluye cachés y compilados.
+El empaquetador incluye los archivos del proyecto registrados en el índice de Git y crea las entradas explícitas de carpetas que necesita el importador de Godot. Excluye cachés y compilados. El ZIP es el proyecto editable y requiere Godot .NET para ejecutarlo.

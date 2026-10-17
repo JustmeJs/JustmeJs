@@ -22,17 +22,25 @@ namespace KleinesSpiel.Scripts.Rooms
     public sealed class DungeonFloor
     {
         public const int RoomCount = 12;
+        public const int FloorCount = 6;
         public readonly Dictionary<string, RoomDefinition> Rooms = new();
         public int Zone;
         public string StartId;
         public string BossId;
         public string BossScene;
         public bool? PortalOutcome;
-        public string Name => Zone == 1 ? "Aschekrypta" : "Amethyst-Ruinen";
+        public bool IsCastle => Zone >= 4;
+        public bool IsFinal => Zone == FloorCount;
+        public string Theme => IsCastle ? "castle" : "crypt";
+        public string Name => NameFor(Zone);
+        public static string NameFor(int floor) => Common.Localization.Format(
+            floor <= 3 ? "Ash Crypt {0}" : "Castle {0}",
+            floor <= 3 ? "Aschekrypta {0}" : "Schloss {0}", (floor - 1) % 3 + 1);
         public static readonly Vector2I[] Offsets = { Vector2I.Up, Vector2I.Down, Vector2I.Left, Vector2I.Right };
 
         public static DungeonFloor Generate(int seed, int zone)
         {
+            if (zone < 1 || zone > FloorCount) throw new ArgumentOutOfRangeException(nameof(zone));
             for (int attempt = 0; attempt < 128; attempt++)
             {
                 var random = new Random(unchecked(seed + zone * 104729 + attempt * 7919));
@@ -54,7 +62,7 @@ namespace KleinesSpiel.Scripts.Rooms
                 if (cells.Count != RoomCount || cells.Min(p => p.X) >= 0 || cells.Max(p => p.X) <= 0
                     || cells.Min(p => p.Y) >= 0 || cells.Max(p => p.Y) <= 0) continue;
                 var leaves = cells.Where(p => p != Vector2I.Zero && Offsets.Count(d => cells.Contains(p + d)) == 1).ToList();
-                if (leaves.Count < 3) continue;
+                if (leaves.Count < 2) continue;
                 var distances = new Dictionary<Vector2I, int> { [Vector2I.Zero] = 0 };
                 var queue = new Queue<Vector2I>();
                 queue.Enqueue(Vector2I.Zero);
@@ -73,11 +81,18 @@ namespace KleinesSpiel.Scripts.Rooms
                 var boss = farLeaves[random.Next(farLeaves.Count)];
                 leaves.Remove(boss);
                 Shuffle(leaves, random);
-                var treasures = leaves.Take(2).ToHashSet();
+                var treasures = leaves.Take(1).ToHashSet();
                 var layouts = Enumerable.Range(0, 6).ToList();
                 Shuffle(layouts, random);
                 var floor = new DungeonFloor { Zone = zone, StartId = Id(zone, Vector2I.Zero), BossId = Id(zone, boss) };
-                var bossPool = zone == 1 ? new[] { "res://Scenes/Enemies/BossMelee.tscn", "res://Scenes/Enemies/BossRanged.tscn" } : new[] { "res://Scenes/Enemies/Boss.tscn", "res://Scenes/Enemies/BossFourWay.tscn" };
+                var bossPool = zone switch
+                {
+                    1 or 2 => new[] { "res://Scenes/Enemies/BossMelee.tscn", "res://Scenes/Enemies/BossRanged.tscn" },
+                    3 => new[] { "res://Scenes/Enemies/Boss.tscn" },
+                    4 => new[] { "res://Scenes/Enemies/BossRanged.tscn", "res://Scenes/Enemies/BossFourWay.tscn" },
+                    5 => new[] { "res://Scenes/Enemies/Boss.tscn", "res://Scenes/Enemies/BossFourWay.tscn" },
+                    _ => new[] { "res://Scenes/Enemies/CastleBoss.tscn" }
+                };
                 floor.BossScene = bossPool[random.Next(bossPool.Length)];
                 int normalIndex = 0;
                 foreach (var position in cells.OrderBy(p => p.Y).ThenBy(p => p.X))

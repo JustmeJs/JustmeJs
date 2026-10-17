@@ -6,8 +6,10 @@
 
 [resource]
 script = ExtResource("1")
-ItemName = "Sanduhr des Zaubers"
-EffectDescription = "Die Pause zwischen deinen Schuessen sinkt dauerhaft um 20% - du kannst spuerbar schneller hintereinander feuern."
+ItemName = "Spell Hourglass"
+EffectDescription = "Cast cooldown reduced by 20%."
+GermanItemName = "Sanduhr des Zaubers"
+GermanEffectDescription = "Die Pause zwischen Zaubern sinkt um 20 %."
 EffectType = 2
 EffectValue = 20.0
 Icon = ExtResource("art")

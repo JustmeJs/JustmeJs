@@ -31,10 +31,10 @@ text = "Game Over"
 process_mode = 3
 layout_mode = 2
 custom_minimum_size = Vector2(220, 50)
-text = "Nochmal versuchen"
+text = "Retry"
 
 [node name="MenuButton" type="Button" parent="CenterContainer/VBoxContainer"]
 process_mode = 3
 layout_mode = 2
 custom_minimum_size = Vector2(220, 50)
-text = "Zum Hauptmenue"
+text = "Main menu"

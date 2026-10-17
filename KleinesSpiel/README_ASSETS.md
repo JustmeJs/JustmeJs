@@ -1,78 +1,100 @@
-# Kleines Spiel — mazmorras, assets y animaciones
+# Kleines Spiel — juego, assets y validación
 
 ## Abrir y jugar
 
-1. Extrae el ZIP en una carpeta vacía conservando sus subcarpetas.
+1. Extrae el ZIP actualizado en una carpeta vacía.
 2. Importa `KleinesSpiel/project.godot` con **Godot 4.3 .NET** y **.NET SDK 8**. La edición estándar no ejecuta C#.
 3. Compila con Build del editor o `dotnet build` desde esta carpeta.
-4. Pulsa **F5** y selecciona **Spielen**.
+4. Pulsa **F5** y elige **Play**.
 
-WASD: movimiento. Flechas: disparo. Espacio: dash. Escape: pausa. La interfaz mantiene el alemán del proyecto original.
+WASD: movimiento. Flechas: disparo. Espacio: dash. Escape: pausa.
 
-## Estructura de una partida
+En todos los menús puedes seleccionar con cualquiera de las cuatro flechas, confirmar con Enter/Espacio o usar el ratón. La primera opción recibe el foco al abrirlos y la navegación vuelve al inicio al llegar al final. Espacio al confirmar no activa el dash al regresar al juego.
 
-Cada zona genera un árbol conectado de 12 habitaciones dentro de una cuadrícula de 5 × 5: una inicial, ocho de combate, dos de tesoro y una de jefe. Hay conexiones arriba, abajo, izquierda y derecha. El jefe ocupa una de las hojas más alejadas de la entrada; los tesoros también están en extremos. Los enemigos bloquean las salidas hasta que todos han sido derrotados.
+El juego empieza en inglés. El botón de idioma del menú principal alterna inglés y alemán y actualiza el texto inmediatamente. La preferencia se guarda en `user://settings.cfg`, fuera del proyecto, y se conserva al reiniciar. Los menús, HUD, instrucciones, nombres de niveles, portales, jefes y objetos se muestran en el idioma elegido. El título propio sigue siendo «Kleines Spiel».
 
-Las ocho salas de combate usan seis distribuciones de obstáculos, barajadas para que las seis aparezcan en cada zona. También varían la selección y posición de los enemigos. Los puntos de aparición evitan los obstáculos y la entrada del jugador. El minimapa muestra la sala actual y las adyacentes descubiertas.
+![Menú en inglés](Documentation/menu_english.png)
 
-Las salas se conservan durante la visita a una zona: volver no regenera enemigos ni tesoros recogidos, y mantiene los corazones que hayan quedado en el suelo. Los proyectiles se eliminan al cambiar de habitación. Se descartan las salas antiguas al cambiar de zona, reiniciar o salir al menú.
+[Menú en alemán](Documentation/menu_german.png) · [Selección por teclado durante la pausa](Documentation/pause_keyboard.png)
 
-Al vencer al primer jefe se decide una sola vez si aparece un portal: **70 % por defecto**. Si aparece, la partida continúa al entrar en él; conserva jugador, vida y mejoras. Las Ruinas de Amatista generan otras 12 habitaciones, cambian la paleta y aumentan la dificultad. Cada zona elige entre dos variantes de jefe; los conjuntos son distintos, de modo que el jefe final no repite el primero. Sin portal, vencer al primer jefe termina en victoria. Vencer al jefe de la segunda zona siempre termina la partida.
+## Seis niveles y dos entornos
 
-El autoload `DungeonManager` expone `NextZoneChance` (0–1) y `SeedOverride` (0 = semilla aleatoria). La semilla controla el mapa, sus contenidos, los objetos y la tirada del portal. Los corazones soltados por enemigos mantienen su tirada independiente.
-
-![Variantes y conexiones de las habitaciones](Documentation/dungeon_rooms.png)
-
-![Portal después del primer jefe](Documentation/zone_portal.png)
-
-![Segunda zona](Documentation/zone_two_combat.png)
-
-## Objetos pasivos
-
-Cada partida baraja los cinco objetos y reparte dos por zona sin repetición. El icono mostrado procede del propio `ItemData`, igual que la mejora aplicada y el texto de recogida.
-
-| Icono | Nombre en el juego | Efecto |
+| Niveles | Entorno | Final del nivel |
 | --- | --- | --- |
-| Medallón de corazón | Herzmedaillon | +1 corazón máximo completo y curación de esa cantidad. |
-| Bota alada | Gefluegelter Stiefel | +15 % de velocidad de movimiento. |
-| Reloj de arena | Sanduhr des Zaubers | −20 % de espera entre disparos. |
-| Hoja de rubí | Rubinklinge | +25 % de daño de los proyectiles. |
-| Punta de lanza | Durchdringende Spitze | Los proyectiles atraviesan un enemigo adicional. |
+| 1–3 | Ash Crypt / Aschekrypta | Jefe y portal garantizado. El portal del nivel 3 lleva al castillo. |
+| 4–5 | Castle / Schloss | Jefe más resistente y portal garantizado. |
+| 6 | Castle / Schloss | The Castle Regent / Der Schlossregent; su derrota termina en victoria. |
+
+Cada nivel genera un árbol conectado de 12 habitaciones en una cuadrícula de 5 × 5: una entrada, nueve salas de combate, un tesoro y una sala de jefe. Las conexiones pueden ir arriba, abajo, izquierda y derecha. El jefe ocupa uno de los extremos más alejados de la entrada. Las salas de combate distribuyen seis variantes de obstáculos; aparecen todas en cada nivel. También varían la mezcla y posición de los enemigos.
+
+Las puertas bloquean el paso durante el combate y se abren al eliminar a todos los enemigos. Las habitaciones se conservan durante la exploración del mismo nivel: volver no regenera enemigos ni tesoros recogidos, y mantiene los corazones que hayan quedado. El minimapa revela las habitaciones descubiertas. Al pasar por un portal se conservan vida, jugador y mejoras; el mapa y las salas se sustituyen por los del siguiente nivel.
+
+Los niveles 1–3 mantienen la cripta. En el cuarto cambia el entorno al castillo, con mármol, alfombras, estandartes y ventanas; este aspecto se conserva en los niveles 4–6. La resistencia y cantidad de enemigos aumentan gradualmente. Su velocidad normal sigue por debajo de la velocidad inicial del jugador; las embestidas del jefe final son ataques breves y avisados.
+
+El autoload `DungeonManager` expone `SeedOverride`: 0 elige una semilla aleatoria. La semilla determina los mapas, sus contenidos y los objetos. Los corazones soltados mantienen su tirada independiente. Los portales ya no se sortean: aparecen siempre en los niveles 1–5. El sexto termina con la pantalla de victoria.
+
+![Cripta](Documentation/dungeon_rooms.png)
+
+![Castillo](Documentation/castle_rooms.png)
+
+[Portal de la cripta al castillo](Documentation/zone_portal.png) · [Vista previa de la progresión](Documentation/roguelike_preview.gif)
+
+## Un pasivo por nivel
+
+La partida baraja seis mejoras y reparte exactamente una por nivel, sin repetición. Cada una tiene un icono distinto que representa su efecto. El objeto mostrado, el texto traducido y la mejora proceden del mismo recurso `ItemData`.
+
+| Icono / objeto | Efecto |
+| --- | --- |
+| Heart Medallion / Herzmedaillon | +1 corazón máximo completo y curación de esa cantidad. |
+| Winged Boot / Geflügelter Stiefel | +15 % de velocidad de movimiento. |
+| Spell Hourglass / Sanduhr des Zaubers | −20 % de espera entre disparos. |
+| Ruby Blade / Rubinklinge | +25 % de daño de los proyectiles. |
+| Piercing Tip / Durchdringende Spitze | Los proyectiles atraviesan un enemigo adicional. |
+| Arcane Lens / Arkane Linse | +25 % de velocidad de los proyectiles. |
 
 ![Iconos y efectos](Documentation/passive_items.png)
 
-La hoja y la punta representan mejoras pasivas; el arma que lleva el personaje sigue siendo su vara mágica.
+La hoja y la punta representan mejoras pasivas; el mago sigue llevando su vara. La lente nueva usa un SVG propio, con un rayo y trazos de velocidad, y se presenta al mismo tamaño que los demás objetos.
 
-## Animaciones
+## Contacto cuerpo a cuerpo y jefe final
 
-Los ocho personajes usan `AnimatedSprite2D`. El mago tiene 32 poses en cuatro direcciones para reposo, movimiento, lanzamiento, daño, dash y derrota. `ActorAnimator` mantiene la dirección del lanzamiento aunque camines en otra dirección; los proyectiles y destellos aparecen en la punta de la vara usando los cuatro valores `CastOffset` del jugador. Los enemigos y jefes mantienen sus poses frontales con volteo horizontal.
+Tras tocar al jugador, el enemigo retrocede durante 0,22 s y se recupera durante 0,28 s antes de perseguirlo de nuevo. El retroceso usa colisiones reales y busca una dirección libre cuando hay una pared detrás. El jugador recibe empuje solo si el contacto ha causado daño: la invulnerabilidad por daño o dash impide nuevos empujes. El comportamiento también se aplica a jefes que golpean por contacto.
 
-La prioridad de estados es muerte, daño, dash, ataque, movimiento y reposo. Al morir un enemigo se desactiva su combate y su evento de derrota se emite una vez. Su presentación permanece brevemente para terminar la caída, incluso al mostrarse la victoria. Los personajes vivos se congelan al pausar.
+El Regente tiene 140 puntos de vida, una corona y un aura propias sobre su sprite animado. Alterna tres ataques:
 
-Los objetos flotan, oscilan y brillan; al recogerlos aplican el efecto una sola vez y desaparecen con una animación. Los proyectiles tienen pulso, estela e impacto. Las puertas animan apertura y cierre, el portal gira y emite chispas, las antorchas parpadean y la interfaz anima corazones, menús y botones.
+- Abanicos de proyectiles dirigidos hacia la posición anunciada del jugador.
+- Anillos de proyectiles con una abertura de 72 grados, marcada durante el aviso.
+- Una embestida con dirección fijada durante el aviso, que termina al chocar o agotar su recorrido.
 
-[Disparos del mago](Documentation/mage_casting_preview.gif) · [Galería de animaciones](Documentation/animations_preview.gif) · [Recorrido de mazmorra](Documentation/roguelike_preview.gif)
+A la mitad de vida entra en una segunda fase: más proyectiles y ráfagas, avisos algo más cortos y una embestida más rápida. Todos los ataques tienen preparación y recuperación. La pausa congela ataques y proyectiles. Al morir, el jefe detiene sus ataques y elimina sus proyectiles restantes.
 
-Las galerías usan poses o encuentros controlados para mostrar el contenido; no son una partida ganada sin asistencia.
+![Regente y aviso de ataque](Documentation/final_boss.png)
 
-## Organización y limpieza
+[Victoria tras el sexto nivel](Documentation/victory.png)
 
-- `Scripts/Rooms/DungeonFloor.cs`: datos, semilla, generación del grafo y elección de habitaciones/jefe.
-- `DungeonManager.cs`: partida, conservación de salas, puertas, minimapa y progresión entre zonas.
-- `Room.cs` y `RoomLayouts.cs`: construcción de paredes, obstáculos, puertas, enemigos y tesoros.
-- `RoomArt.cs` y `ZonePortal.cs`: presentación de las zonas y portal interactivo.
-- `Scripts/Items/ItemCatalog.cs` y `Resources/Items/`: catálogo de mejoras e iconos.
-- `Assets/Sprites/hero_mage_directional.png` y `hero_mage_manifest.json`: atlas del mago y regiones de las poses.
-- `Assets/Sprites/characters_animated.png` y `Resources/Animations/`: atlas y secuencias de enemigos/jefes.
-- `Assets/Sprites/dungeon_atlas.png`: iconos y proyectiles activos.
-- `Scripts/Common/ActorAnimator.cs`, `Scripts/Effects/`, `Scripts/Items/PickupMotion.cs`: animación y efectos.
-- `Assets/Sprites/Tiles/door_transition.gdshader`: transición de la reja.
+## Animaciones y archivos
 
-Se eliminaron los tres PNG originales de reemplazo, su recurso de animación, siete recursos gráficos estáticos sustituidos, dos manifiestos obsoletos, las ocho escenas del recorrido fijo y sus utilidades sin uso. Los atlas compartidos se mantienen completos porque sus regiones activas siguen utilizándose. Las imágenes de `Documentation/` son material de referencia, no se cargan durante el juego.
+El mago tiene poses propias en cuatro direcciones. La animación del lanzamiento sigue la dirección del disparo aunque camines hacia otro lado; proyectiles y destellos salen de la punta de la vara usando los cuatro valores `CastOffset`. Los enemigos usan sus secuencias de reposo, movimiento, ataque, daño y muerte con volteo horizontal.
 
-No se atribuye una licencia nueva a los archivos originales ni se utilizaron packs comerciales. El atlas direccional del mago fue generado con IA en la revisión anterior.
+La prioridad de estados es muerte, daño, dash, ataque, movimiento y reposo. Al morir un enemigo se desactiva su combate inmediatamente; la presentación permanece brevemente para terminar la animación. Los objetos aplican el efecto una sola vez y desaparecen con una animación. Proyectiles, puertas, portales, antorchas e interfaz tienen efectos animados.
 
-## Validación
+[Disparos del mago](Documentation/mage_casting_preview.gif) · [Galería de animaciones](Documentation/animations_preview.gif)
+
+- `Scripts/Common/Localization.cs`: elección persistente del idioma y textos bilingües.
+- `Scripts/UI/MenuMotion.cs`: foco, vecinos de navegación y presentación de botones.
+- `Scripts/Rooms/DungeonFloor.cs`: generación por semilla y elección de habitaciones/jefe.
+- `DungeonManager.cs`: partida, caché de habitaciones y progresión de seis niveles.
+- `Room.cs`, `RoomLayouts.cs`, `RoomArt.cs` y `ZonePortal.cs`: contenido, geometría, entornos y portales.
+- `Scripts/Enemies/Enemy.cs`: combate y separación después del contacto.
+- `Scripts/Enemies/CastleBoss.cs`: ataques, fases y presentación del jefe final.
+- `Scripts/Items/ItemCatalog.cs` y `Resources/Items/`: seis mejoras, iconos y textos en ambos idiomas.
+- `Assets/Sprites/hero_mage_directional.png` y `hero_mage_manifest.json`: atlas y regiones del mago.
+- `Assets/Sprites/characters_animated.png` y `Resources/Animations/`: secuencias de enemigos y jefes.
+- `Assets/Sprites/dungeon_atlas.png`: iconos y proyectiles activos; `arcane_lens.svg`: sexto icono.
+
+Los gráficos originales de reemplazo, recursos estáticos sustituidos y escenas del recorrido fijo ya fueron eliminados. Los atlas compartidos permanecen completos porque contienen regiones activas. Las imágenes de `Documentation/` son referencias y no se cargan durante el juego. El atlas del mago fue generado con IA en una revisión anterior; no se usaron packs comerciales ni se atribuye una licencia nueva a los archivos originales.
+
+## Comprobaciones
 
 Desde esta carpeta, con Godot **.NET** y .NET SDK 8 en PATH:
 
@@ -80,13 +102,15 @@ Desde esta carpeta, con Godot **.NET** y .NET SDK 8 en PATH:
 dotnet build
 godot --headless --editor --path . --quit
 godot --headless --fixed-fps 60 --path . --script res://Tests/RoguelikeSmoke.gd
+godot --headless --fixed-fps 60 --path . --script res://Tests/MenuLanguageSmoke.gd
+godot --headless --fixed-fps 60 --path . --script res://Tests/MeleeContactSmoke.gd
+godot --headless --fixed-fps 60 --path . --script res://Tests/FinalBossSmoke.gd
 godot --headless --fixed-fps 60 --path . --script res://Tests/AnimationSmoke.gd
 godot --headless --fixed-fps 60 --path . --script res://Tests/MageCastingSmoke.gd
 ```
 
-- `RoguelikeSmoke`: 1.461 comprobaciones. Genera 400 mapas y verifica conexión, puertas recíprocas, límites, variedad, tesoros y jefes. Prueba cruce físico de puertas en cuatro direcciones y bloqueo durante combate. Recorre ambas zonas con daño de prueba, recoge cuatro mejoras distintas, vuelve a salas anteriores y comprueba conservación de estado, limpieza, entrada real al portal, jefe diferente, victoria y reinicio. Cubre también la rama sin portal.
-- `AnimationSmoke`: 180 comprobaciones de animaciones, combate, recogida única, pausa, efectos y puertas.
-- `MageCastingSmoke`: 72 comprobaciones de las cuatro direcciones, origen de disparos y movimiento independiente.
-- `python3 Tools/audit_assets.py`, desde la raíz del repositorio: verifica referencias, recursos gráficos sin uso y cinco iconos/efectos diferentes.
+Las pruebas comprueban 1.200 mapas, puertas físicas en las cuatro direcciones, recorrido de los seis niveles, un objeto distinto por nivel, transición de entorno en el cuarto, conservación de mejoras, portales garantizados, victoria y reinicio. Las pruebas de menú envían teclas reales y arrancan procesos nuevos de Godot para comprobar la persistencia. Las pruebas de combate comprueban separación física, paredes, invulnerabilidad y los tres ataques del jefe final, incluyendo contacto real durante su embestida.
 
-El paquete excluye `.godot`, `.import` regenerables y compilados. Incluye entradas explícitas de carpetas para el importador de Godot. Antes de distribuirlo se comprueban la extracción y compilación de una copia limpia del ZIP.
+Desde la raíz del repositorio, `python3 Tools/audit_assets.py` comprueba referencias, recursos visuales sin uso y seis iconos/efectos distintos. El paquete excluye `.godot`, metadatos `.import` regenerables y compilados; contiene entradas de carpetas para Godot. Antes de distribuirlo se valida extracción, compilación y pruebas desde una copia limpia.
+
+Las pruebas de progresión y las vistas previas usan derrotas controladas y protección del jugador; no equivalen a una partida completa ganada sin asistencia.

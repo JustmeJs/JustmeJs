@@ -6,8 +6,10 @@
 
 [resource]
 script = ExtResource("1")
-ItemName = "Gefluegelter Stiefel"
-EffectDescription = "Deine Laufgeschwindigkeit steigt dauerhaft um 15% - du bewegst dich spuerbar schneller durch die Raeume und weichst leichter aus."
+ItemName = "Winged Boot"
+EffectDescription = "Move 15% faster."
+GermanItemName = "Geflügelter Stiefel"
+GermanEffectDescription = "Bewege dich 15 % schneller."
 EffectType = 1
 EffectValue = 15.0
 Icon = ExtResource("art")

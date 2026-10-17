@@ -5,6 +5,7 @@ namespace KleinesSpiel.Scripts.Rooms
     public partial class ZonePortal : Area2D
     {
         public string SourceRoomId;
+        public int DestinationFloor;
         private float _time;
         private bool _armed;
         public override void _Ready()
@@ -19,8 +20,8 @@ namespace KleinesSpiel.Scripts.Rooms
             };
             var player = GetTree().GetFirstNodeInGroup("player") as Node2D;
             _armed = player == null || player.GlobalPosition.DistanceTo(GlobalPosition) > 42;
-            AddChild(new Label { Position = new Vector2(-95, 38), Size = new Vector2(190, 28),
-                Text = "Amethyst-Ruinen", HorizontalAlignment = HorizontalAlignment.Center,
+            AddChild(new Label { Position = new Vector2(-140, 38), Size = new Vector2(280, 48),
+                Text = DungeonFloor.NameFor(DestinationFloor), HorizontalAlignment = HorizontalAlignment.Center,
                 MouseFilter = Control.MouseFilterEnum.Ignore });
         }
         public override void _PhysicsProcess(double delta)

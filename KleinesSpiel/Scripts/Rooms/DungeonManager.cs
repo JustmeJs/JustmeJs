@@ -8,7 +8,6 @@ namespace KleinesSpiel.Scripts.Rooms
     public partial class DungeonManager : Node
     {
         public static DungeonManager Instance { get; private set; }
-        [Export(PropertyHint.Range, "0,1,0.01")] public float NextZoneChance = 0.7f;
         [Export] public int SeedOverride;
         private Node _roomContainer;
         private Player.Player _player;
@@ -17,7 +16,6 @@ namespace KleinesSpiel.Scripts.Rooms
         private readonly Dictionary<string, Room> _instances = new();
         private readonly Dictionary<string, MinimapRoomInfo> _map = new();
         private readonly Queue<int> _items = new();
-        private Random _exitRandom;
         private int _seed;
         private bool _transitionQueued;
         private int _arrivalFrames;
@@ -28,6 +26,8 @@ namespace KleinesSpiel.Scripts.Rooms
         public int GetZoneIndex() => _floor?.Zone ?? 0;
         public int GetRunSeed() => _seed;
         public string GetZoneName() => _floor?.Name ?? "";
+        public string GetTheme() => _floor?.Theme ?? "crypt";
+        public int GetFloorCount() => DungeonFloor.FloorCount;
         public string GetCurrentRoomId() => _current?.Definition.Id ?? "";
         public Room GetCurrentRoom() => _current;
         public bool GetPortalAvailable() => _floor?.PortalOutcome == true;
@@ -71,7 +71,6 @@ namespace KleinesSpiel.Scripts.Rooms
             _roomContainer = roomContainer;
             _player = player;
             _seed = SeedOverride != 0 ? SeedOverride : Random.Shared.Next(1, int.MaxValue);
-            _exitRandom = new Random(_seed ^ 0x53ad1);
             var bag = Enumerable.Range(0, Items.ItemCatalog.Paths.Length).ToList();
             DungeonFloor.Shuffle(bag, new Random(_seed ^ 0x195af));
             _items.Clear();
@@ -90,7 +89,8 @@ namespace KleinesSpiel.Scripts.Rooms
                 room.ItemIndex = _items.Dequeue();
             _map.Clear();
             EnterRoom(_floor.StartId, new Vector2(512, 480));
-            Hud()?.ShowItemPopup($"Zone {zone}: {_floor.Name}", "Erkunde die Verzweigungen und finde den Boss.", 3);
+            Hud()?.ShowItemPopup(Common.Localization.Format("Floor {0}/6: {1}", "Ebene {0}/6: {1}", zone, _floor.Name),
+                Common.Localization.Text("Find the treasure and defeat the boss.", "Finde den Schatz und besiege den Boss."), 3);
         }
 
         private void ReleaseRooms()
@@ -179,18 +179,19 @@ namespace KleinesSpiel.Scripts.Rooms
             if (room != _current) return;
             MapChanged?.Invoke();
             if (room.Definition.Kind != RoomMapType.Boss || _floor.PortalOutcome.HasValue || _finished) return;
-            _floor.PortalOutcome = _floor.Zone == 1 && _exitRandom.NextDouble() < NextZoneChance;
+            _floor.PortalOutcome = !_floor.IsFinal;
             if (_floor.PortalOutcome == true)
             {
                 room.CreatePortal();
-                Hud()?.ShowItemPopup("Ein Portal ist erschienen!", "Betritt das Portal zu den Amethyst-Ruinen.", 5);
+                Hud()?.ShowItemPopup(Common.Localization.Text("The way forward is open!", "Der Weg ist frei!"),
+                    Common.Localization.Format("Enter the portal to {0}.", "Betritt das Portal zu {0}.", DungeonFloor.NameFor(_floor.Zone + 1)), 5);
             }
             else FinishRun();
         }
 
         public bool RequestNextZone(string roomId)
         {
-            if (_transitionQueued || _arrivalFrames > 0 || _finished || GetTree().Paused || _floor.Zone != 1
+            if (_transitionQueued || _arrivalFrames > 0 || _finished || GetTree().Paused || _floor.IsFinal
                 || _floor.PortalOutcome != true || GetCurrentRoomId() != roomId
                 || !_current.IsCleared() || roomId != _floor.BossId) return false;
             _transitionQueued = true;
@@ -201,7 +202,7 @@ namespace KleinesSpiel.Scripts.Rooms
         private void FinishNextZone()
         {
             if (GetTree().Paused || _player.GetCurrentHealthHalfHearts() <= 0) { _transitionQueued = false; return; }
-            BeginZone(2);
+            BeginZone(_floor.Zone + 1);
             _transitionQueued = false;
         }
 
@@ -210,8 +211,6 @@ namespace KleinesSpiel.Scripts.Rooms
             _finished = true;
             GetTree().Paused = true;
             var screen = GD.Load<PackedScene>("res://Scenes/UI/VictoryScreen.tscn").Instantiate();
-            screen.GetNode<Label>("CenterContainer/VBoxContainer/TitleLabel").Text = _floor.Zone == 2
-                ? "Die Amethyst-Ruinen sind befreit!" : "Die Aschekrypta ist bezwungen!";
             GetTree().Root.AddChild(screen);
         }
 
@@ -251,7 +250,7 @@ namespace KleinesSpiel.Scripts.Rooms
                     ["id"] = room.Id, ["position"] = room.Position, ["kind"] = room.Kind.ToString(),
                     ["layout"] = room.Layout, ["neighbors"] = neighbors, ["cleared"] = room.Cleared,
                     ["collected"] = room.TreasureCollected, ["item"] = room.ItemIndex,
-                    ["boss_scene"] = floor.BossScene
+                    ["boss_scene"] = floor.BossScene, ["theme"] = floor.Theme, ["floor"] = floor.Zone
                 });
             }
             return result;

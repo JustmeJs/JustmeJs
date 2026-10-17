@@ -6,8 +6,10 @@
 
 [resource]
 script = ExtResource("1")
-ItemName = "Durchdringende Spitze"
-EffectDescription = "Deine Projektile durchschlagen ab sofort einen zusaetzlichen Gegner, bevor sie verschwinden - ideal wenn mehrere Gegner in einer Reihe stehen."
+ItemName = "Piercing Tip"
+EffectDescription = "Projectiles pierce one additional enemy."
+GermanItemName = "Durchdringende Spitze"
+GermanEffectDescription = "Projektile durchschlagen einen zusätzlichen Gegner."
 EffectType = 4
 EffectValue = 1.0
 Icon = ExtResource("art")

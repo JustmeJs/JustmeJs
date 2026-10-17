@@ -122,7 +122,7 @@ func run() -> void:
    node.queue_free()
  await frames(2)
 
- for name in ["Item01_ExtraHeart", "Item02_MoveSpeed", "Item03_FireRate", "Item04_Damage", "Item05_Piercing"]:
+ for name in ["Item01_ExtraHeart", "Item02_MoveSpeed", "Item03_FireRate", "Item04_Damage", "Item05_Piercing", "Item06_ArcaneLens"]:
   var data = load("res://Resources/Items/" + name + ".tres")
   var item = load("res://Scenes/Items/ItemPickup.tscn").instantiate()
   item.Data = data

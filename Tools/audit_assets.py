@@ -32,15 +32,18 @@ for item in sorted((root / "Resources/Items").glob("*.tres")):
     text = item.read_text()
     icon_uri = re.search(r'\[ext_resource type="Texture2D" path="([^"]+)"', text).group(1)
     icon = root / icon_uri.removeprefix("res://")
-    icon_text = icon.read_text()
-    region = re.search(r'region = Rect2\(([^)]+)\)', icon_text).group(1)
-    atlas = re.search(r'path="([^"]+)"', icon_text).group(1)
-    icons.add((atlas, region))
+    if icon.suffix == ".tres":
+        icon_text = icon.read_text()
+        region = re.search(r'region = Rect2\(([^)]+)\)', icon_text).group(1)
+        atlas = re.search(r'path="([^"]+)"', icon_text).group(1)
+        icons.add((atlas, region))
+    else:
+        icons.add((icon_uri, "whole"))
     effects.add(int(re.search(r'EffectType = (\d+)', text).group(1)))
 for source, uri in missing:
     print(f"MISSING: {source}: {uri}")
 for source in unused:
     print(f"UNUSED: {source.relative_to(root)}")
-if missing or unused or len(icons) != 5 or effects != set(range(5)):
+if missing or unused or len(icons) != 6 or effects != set(range(6)):
     raise SystemExit(1)
-print(f"ASSET AUDIT PASSED: {len(visuals)} active visual resources; five distinct passive icons and effects.")
+print(f"ASSET AUDIT PASSED: {len(visuals)} active visual resources; six distinct passive icons and effects.")

@@ -1,4 +1,5 @@
 using Godot;
+using KleinesSpiel.Scripts.Common;
 
 namespace KleinesSpiel.Scripts.UI
 {
@@ -13,14 +14,19 @@ namespace KleinesSpiel.Scripts.UI
 
 		public override void _Ready()
 		{
-			MenuMotion.Configure(this);
 			ProcessMode = ProcessModeEnum.Always;
+			MenuMotion.Configure(this);
 
 			var continueButton = GetNode<Button>("CenterContainer/VBoxContainer/ContinueButton");
 			var retryButton = GetNode<Button>("CenterContainer/VBoxContainer/RetryButton");
 			var menuButton = GetNode<Button>("CenterContainer/VBoxContainer/MenuButton");
 
+			continueButton.Text = Localization.Text("Resume", "Weiterspielen");
 			continueButton.Pressed += OnContinuePressed;
+			GetNode<Label>("CenterContainer/VBoxContainer/TitleLabel").Text = Localization.Text("Paused", "Pausiert");
+			retryButton.Text = Localization.Text("Retry", "Neu versuchen");
+			menuButton.Text = Localization.Text("Main menu", "Hauptmenü");
+
 			retryButton.Pressed += OnRetryPressed;
 			menuButton.Pressed += OnMenuPressed;
 		}

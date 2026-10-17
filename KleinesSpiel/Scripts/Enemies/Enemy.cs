@@ -16,11 +16,11 @@ namespace KleinesSpiel.Scripts.Enemies
 		[ExportGroup("Kontaktschaden")]
 		[Export] public int ContactDamageHalfHearts = 1;
 		[Export] public float ContactDamageCooldownSeconds = 0.6f;
-		// Wie stark der Spieler bei einem Treffer weggestossen wird - ohne das
-		// bleibt er (v.a. bei Nahkampf-Gegnern) am Gegner "kleben", weil beide
-		// jeden Frame direkt aufeinander zulaufen. Der Stoss schafft sofort
-		// wieder Abstand, damit man sich wegbewegen kann.
+		// Both actors separate after contact; chasing pauses long enough to dodge.
 		[Export] public float ContactKnockbackForce = 220f;
+		[Export] public float ContactRecoilSpeed = 150f;
+		[Export] public float ContactRecoilSeconds = 0.22f;
+		[Export] public float ContactRecoverySeconds = 0.28f;
 
 		[ExportGroup("Herz-Drop")]
 		// Wahrscheinlichkeit (0-1), dass beim Tod dieses Gegners ein
@@ -36,6 +36,9 @@ namespace KleinesSpiel.Scripts.Enemies
 		protected Node2D PlayerReference; // wird bei Bedarf gesucht (fuer Verfolgung/Zielen)
 
 		private float _contactDamageTimer;
+		private float _contactRecoilTimer;
+		private float _contactRecoveryTimer;
+		private Vector2 _contactRecoilVelocity;
 		private Node2D _visual;
 		private Common.ActorAnimator _animator;
 
@@ -59,7 +62,20 @@ namespace KleinesSpiel.Scripts.Enemies
 				PlayerReference = GetTree().GetFirstNodeInGroup("player") as Node2D;
 			}
 
-			UpdateBehavior(dt);
+			if (_contactRecoilTimer > 0f)
+			{
+				_contactRecoilTimer -= dt;
+				Velocity = _contactRecoilVelocity;
+			}
+			else if (_contactRecoveryTimer > 0f)
+			{
+				_contactRecoveryTimer -= dt;
+				Velocity = Vector2.Zero;
+			}
+			else
+			{
+				UpdateBehavior(dt);
+			}
 			MoveAndSlide();
 			CheckContactDamage();
 			_animator?.SetMotion(Velocity, Velocity);
@@ -95,7 +111,7 @@ namespace KleinesSpiel.Scripts.Enemies
 
 		private void CheckContactDamage()
 		{
-			if (_contactDamageTimer > 0f)
+			if (_contactDamageTimer > 0f || _contactRecoilTimer > 0f || _contactRecoveryTimer > 0f)
 				return;
 
 			for (int i = 0; i < GetSlideCollisionCount(); i++)
@@ -103,14 +119,44 @@ namespace KleinesSpiel.Scripts.Enemies
 				var collision = GetSlideCollision(i);
 				if (collision.GetCollider() is Player.Player player)
 				{
-					AnimateAttack((player.GlobalPosition - GlobalPosition).Normalized());
-					player.TakeDamage(ContactDamageHalfHearts);
+					Vector2 directionToPlayer = (player.GlobalPosition - GlobalPosition).Normalized();
+					if (directionToPlayer.IsZeroApprox()) directionToPlayer = -collision.GetNormal();
+					AnimateAttack(directionToPlayer);
 					_contactDamageTimer = ContactDamageCooldownSeconds;
+					BeginContactRecovery(-directionToPlayer);
 
-					Vector2 knockbackDirection = (player.GlobalPosition - GlobalPosition).Normalized();
-					player.ApplyKnockback(knockbackDirection, ContactKnockbackForce);
+					// Dash and hurt immunity also prevent knockback. Otherwise a crowd
+					// can keep resetting the player's forced movement without a hit.
+					if (!player.IsInvincible() && player.GetCurrentHealthHalfHearts() > 0)
+					{
+						int healthBefore = player.GetCurrentHealthHalfHearts();
+						player.TakeDamage(ContactDamageHalfHearts);
+						if (player.GetCurrentHealthHalfHearts() > 0 && player.GetCurrentHealthHalfHearts() < healthBefore)
+							player.ApplyKnockback(directionToPlayer, ContactKnockbackForce);
+					}
+					break;
 				}
 			}
+		}
+
+		private void BeginContactRecovery(Vector2 awayFromPlayer)
+		{
+			// Prefer stepping directly back. Against a wall, choose a clear diagonal
+			// or sidestep; MoveAndSlide still handles actual movement and collisions.
+			Vector2 retreat = awayFromPlayer;
+			float distance = Mathf.Max(ContactRecoilSpeed * ContactRecoilSeconds, 1f);
+			foreach (float angle in new[] { 0f, Mathf.Pi / 4f, -Mathf.Pi / 4f, Mathf.Pi / 2f, -Mathf.Pi / 2f })
+			{
+				Vector2 candidate = awayFromPlayer.Rotated(angle);
+				if (!TestMove(GlobalTransform, candidate * distance))
+				{
+					retreat = candidate;
+					break;
+				}
+			}
+			_contactRecoilVelocity = retreat * ContactRecoilSpeed;
+			_contactRecoilTimer = ContactRecoilSeconds;
+			_contactRecoveryTimer = ContactRecoverySeconds;
 		}
 
 		public void TakeDamage(float amount)

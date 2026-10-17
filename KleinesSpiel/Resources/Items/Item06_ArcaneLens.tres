@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Items/ItemData.cs" id="1"]
+[ext_resource type="Texture2D" path="res://Assets/Sprites/arcane_lens.svg" id="art"]
+
+[resource]
+script = ExtResource("1")
+ItemName = "Arcane Lens"
+EffectDescription = "Projectiles travel 25% faster."
+GermanItemName = "Arkane Linse"
+GermanEffectDescription = "Projektile fliegen 25 % schneller."
+EffectType = 5
+EffectValue = 25.0
+Icon = ExtResource("art")

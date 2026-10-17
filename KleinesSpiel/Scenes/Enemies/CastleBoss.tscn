@@ -1,0 +1,35 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Enemies/CastleBoss.cs" id="boss"]
+[ext_resource type="PackedScene" path="res://Scenes/Projectiles/EnemyProjectile.tscn" id="projectile"]
+[ext_resource type="SpriteFrames" path="res://Resources/Animations/demon_boss_frames.tres" id="art"]
+[ext_resource type="Script" path="res://Scripts/Common/ActorAnimator.cs" id="animator"]
+
+[sub_resource type="CircleShape2D" id="body"]
+radius = 28.0
+
+[node name="CastleRegent" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 3
+motion_mode = 1
+script = ExtResource("boss")
+MaxHealth = 140.0
+MoveSpeed = 65.0
+ContactDamageHalfHearts = 2
+ContactDamageCooldownSeconds = 0.8
+HeartDropChance = 0.0
+ProjectileScene = ExtResource("projectile")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("body")
+
+[node name="Visual" type="Node2D" parent="."]
+modulate = Color(1, 0.84, 0.62, 1)
+script = ExtResource("animator")
+Accent = Color(1, 0.78, 0.25, 1)
+
+[node name="Sprite" type="AnimatedSprite2D" parent="Visual"]
+sprite_frames = ExtResource("art")
+animation = &"idle"
+autoplay = "idle"
+scale = Vector2(0.4375, 0.4375)

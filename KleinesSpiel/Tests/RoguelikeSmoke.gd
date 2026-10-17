@@ -54,7 +54,7 @@ func validate_floor(snapshot: Array, zone: int) -> bool:
    if indexed[target].neighbors.get(int(d) ^ 1, "") != room.id: return false
    axes[d] = true
    edge_count += 1
- if kinds != {"Start":1, "Normal":8, "Treasure":2, "Boss":1} or layouts.size() != 6 or axes.size() != 4: return false
+ if kinds != {"Start":1, "Normal":9, "Treasure":1, "Boss":1} or layouts.size() != 6 or axes.size() != 4: return false
  if edge_count != 22 or indexed[start].neighbors.size() < 2: return false
  var distances := {start:0}
  var queue := [start]
@@ -68,7 +68,9 @@ func validate_floor(snapshot: Array, zone: int) -> bool:
  for room in snapshot:
   if room.neighbors.size() == 1 and distances[room.id] > distances[boss]: return false
  var scene: String = indexed[boss].boss_scene
- return scene in (["res://Scenes/Enemies/BossMelee.tscn", "res://Scenes/Enemies/BossRanged.tscn"] if zone == 1 else ["res://Scenes/Enemies/Boss.tscn", "res://Scenes/Enemies/BossFourWay.tscn"])
+ if snapshot.any(func(r): return r.theme != ("crypt" if zone <= 3 else "castle") or r.floor != zone): return false
+ if zone == 6: return scene == "res://Scenes/Enemies/CastleBoss.tscn"
+ return scene in ["res://Scenes/Enemies/BossMelee.tscn", "res://Scenes/Enemies/BossRanged.tscn", "res://Scenes/Enemies/Boss.tscn", "res://Scenes/Enemies/BossFourWay.tscn"]
 
 func protect_player() -> void:
  player = get_first_node_in_group("player")
@@ -141,6 +143,8 @@ func collect_treasure() -> void:
  verify(not collected_icons.has(data.Icon.resource_path), "Treasure bag gives a different passive icon")
  collected_icons[data.Icon.resource_path] = true
  verify(pickup.get_node("Visual/Sprite").texture == data.Icon, "Passive shows its own buff icon")
+ var sprite = pickup.get_node("Visual/Sprite")
+ verify(abs(sprite.texture.get_width() * sprite.scale.x - 40) < 3, "Every passive icon has a consistent visible size")
  player.position = pickup.global_position
  await frames(3)
  pickup.emit_signal("body_entered", player)
@@ -223,68 +227,74 @@ func run() -> void:
  manager = root.get_node("DungeonManager")
  var signatures := {}
  for seed in range(1, 201):
-  for zone in [1, 2]:
+  for zone in range(1, 7):
    var floor_data: Array = manager.PreviewFloor(seed, zone)
    verify(validate_floor(floor_data, zone), "Seed %d zone %d: connected, varied tree with valid special rooms" % [seed, zone])
    signatures[signature(floor_data)] = true
- verify(signatures.size() > 390, "Different seeds produce diverse room maps and layout choices")
+ verify(signatures.size() > 1180, "Different seeds produce diverse room maps and layout choices")
  verify(signature(manager.PreviewFloor(42, 1)) == signature(manager.PreviewFloor(42, 1)), "Same seed reproduces the same floor")
  await physical_doors()
- manager.NextZoneChance = 1.0
  manager.SeedOverride = 1042
  change_scene_to_file("res://Scenes/Main.tscn")
  await frames(4)
  protect_player()
- verify(manager.GetZoneIndex() == 1, "Run starts in first zone")
+ verify(manager.GetZoneIndex() == 1 and manager.GetFloorCount() == 6, "Run starts on floor one of six")
  var discovered: Array = manager.GetMapSnapshot()
  verify(discovered.size() < 12, "Minimap hides undiscovered rooms")
  verify(discovered.filter(func(r): return r.visited).size() == 1, "Only starting room is initially visited")
- await visit_floor()
- var first_boss: String = graph[manager.GetCurrentRoomId()].boss_scene
- var first_room_instances := visited_instances.values()
- await clear_room()
- verify(not paused and not manager.GetRunFinished(), "First boss with portal chance one does not end run")
- verify(manager.GetPortalAvailable(), "First boss rolls a portal")
- var boss_id: String = manager.GetCurrentRoomId()
- var portal = manager.GetCurrentRoom().get_node_or_null("ZonePortal")
- verify(portal != null, "Boss victory spawns a real portal")
- # Backtrack and return: no reroll and no duplicate portal or boss.
- var adjacent: String = graph[boss_id].neighbors.values()[0]
- await navigate(adjacent)
- await navigate(boss_id)
- verify(manager.GetCurrentRoom().get_node("ZonePortal") == portal, "Portal and its outcome persist after revisiting boss")
- verify(manager.GetCurrentRoom().GetAliveCount() == 0, "Boss does not respawn")
- var saved_stats = [player.GetCurrentHealthHalfHearts(), player.GetMaxHealthHalfHearts(), player.MoveSpeed, player.BaseDamage, player.FireCooldownSeconds]
- var first_player = player
- verify(portal.has_node("CollisionShape2D"), "Portal has a real trigger volume")
- # Arm the portal outside its trigger before entering it.
- player.position = Vector2(512, 450)
- await frames(2)
- player.position = portal.global_position
- await frames(5)
- verify(manager.GetZoneIndex() == 2, "Portal enters second zone once")
- verify(player == first_player, "Zone transition preserves player instance")
- verify(saved_stats == [player.GetCurrentHealthHalfHearts(), player.GetMaxHealthHalfHearts(), player.MoveSpeed, player.BaseDamage, player.FireCooldownSeconds], "Health and passive buffs persist between zones")
- for old in first_room_instances: verify(not is_instance_valid(old), "Old zone releases detached cached rooms")
- verify(manager.GetMapSnapshot().all(func(r): return r.id.begins_with("z2:")), "Minimap resets to the second zone")
- verify(manager.GetCurrentRoom().get_node("RoomArt").Amethyst, "Second zone uses its own visual theme")
- visited_instances.clear()
- await visit_floor()
- verify(first_boss != graph[manager.GetCurrentRoomId()].boss_scene, "Final zone has a different boss")
- verify(collected_icons.size() == 4, "Four treasure rooms provide four distinct upgrades")
- await clear_room()
- verify(paused and manager.GetRunFinished(), "Second boss completes the run")
- verify(not manager.GetPortalAvailable(), "Final boss does not lead to an undefined third zone")
- verify(not manager.RequestNextZone(manager.GetCurrentRoomId()), "Finished run rejects another zone transition")
- verify(transitions.size() == 4, "Full run traversed up, down, left and right")
- # Retry from the real UI with a no-portal roll to exercise the other ending.
- manager.NextZoneChance = 0.0
+ var bosses := []
+ var initial_player = player
+ for floor_number in range(1, 7):
+  var expected_theme := "crypt" if floor_number <= 3 else "castle"
+  verify(manager.GetTheme() == expected_theme, "Three crypt floors followed by three castle floors")
+  verify(manager.GetCurrentRoom().get_node("RoomArt").Castle == (floor_number >= 4), "Rendered theme follows floor progression")
+  var snapshot: Array = manager.GetFloorSnapshot()
+  verify(snapshot.filter(func(r): return r.kind == "Treasure").size() == 1, "Exactly one passive treasure per floor")
+  await visit_floor()
+  verify(collected_icons.size() == floor_number, "Each floor gives exactly one different passive")
+  bosses.append(graph[manager.GetCurrentRoomId()].boss_scene)
+  if floor_number == 6:
+   var final_boss = manager.GetCurrentRoom().get_node("Enemies").get_child(0)
+   verify(final_boss.has_method("GetAttackPattern"), "Last floor spawns the unique multi-attack final boss")
+   verify(bosses.slice(0, 5).all(func(scene): return scene != bosses[5]), "Final boss differs from every earlier boss")
+  await clear_room()
+  if floor_number == 6: break
+  verify(not paused and not manager.GetRunFinished(), "Intermediate boss never ends the run")
+  verify(manager.GetPortalAvailable(), "Every intermediate boss guarantees a portal")
+  var boss_id: String = manager.GetCurrentRoomId()
+  var portal = manager.GetCurrentRoom().get_node_or_null("ZonePortal")
+  verify(portal != null and portal.DestinationFloor == floor_number + 1, "Portal points to the next floor")
+  var adjacent: String = graph[boss_id].neighbors.values()[0]
+  await navigate(adjacent)
+  await navigate(boss_id)
+  verify(manager.GetCurrentRoom().get_node("ZonePortal") == portal, "Portal persists after revisiting the boss room")
+  verify(manager.GetCurrentRoom().GetAliveCount() == 0, "Boss does not respawn")
+  var saved_stats := player_stats()
+  var old_rooms := visited_instances.values()
+  verify(portal.has_node("CollisionShape2D"), "Portal has a real trigger volume")
+  player.position = Vector2(512, 450)
+  await frames(2)
+  player.position = portal.global_position
+  await frames(5)
+  verify(manager.GetZoneIndex() == floor_number + 1, "Portal physically enters the next floor exactly once")
+  verify(player == initial_player and saved_stats == player_stats(), "Player, health and all passive stats survive transition")
+  for old in old_rooms: verify(not is_instance_valid(old), "Previous floor releases cached rooms")
+  var prefix := "z%d:" % (floor_number + 1)
+  verify(manager.GetMapSnapshot().all(func(r): return r.id.begins_with(prefix)), "Minimap resets to the new floor")
+  visited_instances.clear()
+ verify(collected_icons.size() == 6, "Six floors give six unique passives")
+ verify(is_equal_approx(player.ProjectileSpeed, 375), "Arcane Lens applies its projectile speed improvement once")
+ verify(paused and manager.GetRunFinished(), "Only the sixth boss completes the run")
+ verify(not manager.GetPortalAvailable() and not manager.GetCurrentRoom().has_node("ZonePortal"), "Final boss ends with victory instead of an undefined floor")
+ verify(not manager.RequestNextZone(manager.GetCurrentRoomId()), "Finished run rejects another transition")
+ verify(transitions.size() == 4, "Full run traversed all four directions")
  var victory = root.get_node("VictoryScreen")
  victory.get_node("CenterContainer/VBoxContainer/RetryButton").emit_signal("pressed")
  await frames(5)
- verify(manager.GetZoneIndex() == 1 and not manager.GetRunFinished(), "Retry creates a fresh first zone")
+ verify(manager.GetZoneIndex() == 1 and not manager.GetRunFinished(), "Retry creates a fresh first floor")
  player = get_first_node_in_group("player")
- verify(player.GetMaxHealthHalfHearts() == 8 and is_equal_approx(player.MoveSpeed, 150), "Retry resets all passive upgrades")
+ verify(player.GetMaxHealthHalfHearts() == 8 and is_equal_approx(player.MoveSpeed, 150)
+  and is_equal_approx(player.ProjectileSpeed, 300), "Retry resets passive upgrades")
  protect_player()
  graph = index_graph(manager.GetFloorSnapshot())
  visited_instances.clear()
@@ -293,7 +303,10 @@ func run() -> void:
   if room.kind == "Boss": retry_boss = room.id
  await navigate(retry_boss)
  await clear_room()
- verify(paused and manager.GetRunFinished() and manager.GetZoneIndex() == 1, "Zero portal chance ends first-zone run without a dead end")
- verify(not manager.GetPortalAvailable() and not manager.GetCurrentRoom().has_node("ZonePortal"), "No portal appears when its roll fails")
+ verify(not paused and not manager.GetRunFinished() and manager.GetPortalAvailable(), "Guaranteed portal also works after retry")
  print("ROGUELIKE CHECKS: ", passed, " passed; ", failed, " failed")
  quit(1 if failed > 0 else 0)
+
+func player_stats() -> Array:
+ return [player.GetCurrentHealthHalfHearts(), player.GetMaxHealthHalfHearts(), player.MoveSpeed,
+  player.BaseDamage, player.FireCooldownSeconds, player.ProjectileSpeed]

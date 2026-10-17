@@ -36,7 +36,7 @@ namespace KleinesSpiel.Scripts.Rooms
                 Name = "Floor", Position = new Vector2(272, 48), Size = new Vector2(480, 480),
                 Texture = GD.Load<Texture2D>("res://Assets/Sprites/Tiles/stone_floor.svg"),
                 StretchMode = TextureRect.StretchModeEnum.Tile, MouseFilter = Control.MouseFilterEnum.Ignore,
-                ZIndex = -20, SelfModulate = Floor.Zone == 2 ? new Color(1.02f, 0.72f, 1.15f) : Colors.White
+                ZIndex = -20, SelfModulate = Floor.IsCastle ? new Color(1.2f, 1.12f, 0.92f) : Colors.White
             });
             var walls = new StaticBody2D { Name = "Walls", CollisionLayer = 1, CollisionMask = 0 };
             AddChild(walls);
@@ -57,14 +57,16 @@ namespace KleinesSpiel.Scripts.Rooms
             foreach (var rectangle in RoomLayouts.Obstacles(Definition.Layout))
                 AddRectangle(obstacles, rectangle.GetCenter(), rectangle.Size);
             AddChild(new RoomArt { Name = "RoomArt", ZIndex = -10,
-                StoneTint = Floor.Zone == 2 ? new Color(1.1f, 0.75f, 1.2f) : Colors.White,
-                Amethyst = Floor.Zone == 2, RoomKind = Definition.Kind });
+                StoneTint = Floor.IsCastle ? new Color(1.35f, 1.2f, 0.95f) : Colors.White,
+                Castle = Floor.IsCastle, RoomKind = Definition.Kind });
             if (Definition.Kind == RoomMapType.Start)
             {
                 AddChild(new Label
                 {
                     Name = "TutorialLabel", Position = new Vector2(305, 225), Size = new Vector2(414, 110),
-                    Text = $"{Floor.Name}\nWASD: Bewegen   Pfeile: Zaubern\nLeertaste: Dash   Esc: Pause\nErkunde den Dungeon in alle Richtungen!",
+                    Text = Floor.Name + "\n" + Common.Localization.Text(
+                        "WASD: Move   Arrows: Cast\nSpace: Dash   Esc: Pause\nFind the one treasure on this floor.",
+                        "WASD: Bewegen   Pfeile: Zaubern\nLeertaste: Dash   Esc: Pause\nFinde den einzigen Schatz dieser Ebene."),
                     HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
                     AutowrapMode = TextServer.AutowrapMode.WordSmart, MouseFilter = Control.MouseFilterEnum.Ignore
                 });
@@ -122,8 +124,8 @@ namespace KleinesSpiel.Scripts.Rooms
             if (Definition.Kind == RoomMapType.Boss)
             {
                 _boss = GD.Load<PackedScene>(Floor.BossScene).Instantiate<Enemies.Enemy>();
-                if (Floor.Zone == 2) _boss.MaxHealth *= 1.5f;
-                AddEnemy(_boss, new Vector2(512, 200));
+                if (!Floor.IsFinal) _boss.MaxHealth *= 1 + (Floor.Zone - 1) * 0.18f;
+                AddEnemy(_boss, new Vector2(512, Floor.IsFinal ? 288 : 200));
                 RefreshBossHud();
             }
             else if (Definition.Kind == RoomMapType.Normal)
@@ -135,11 +137,12 @@ namespace KleinesSpiel.Scripts.Rooms
                     && (player == null || player.Position.DistanceTo(p) > 90)).ToList();
                 DungeonFloor.Shuffle(safe, random);
                 string[] types = { "res://Scenes/Enemies/EnemyMelee.tscn", "res://Scenes/Enemies/EnemyRanged.tscn", "res://Scenes/Enemies/EnemyFourWay.tscn" };
-                int count = Math.Min(safe.Count, random.Next(2, Floor.Zone == 1 ? 4 : 5));
+                int count = Math.Min(safe.Count, random.Next(2, Floor.Zone <= 2 ? 4 : Floor.Zone <= 4 ? 5 : 6));
                 for (int i = 0; i < count; i++)
                 {
                     var enemy = GD.Load<PackedScene>(types[random.Next(types.Length)]).Instantiate<Enemies.Enemy>();
-                    if (Floor.Zone == 2) { enemy.MaxHealth *= 1.4f; enemy.MoveSpeed *= 1.1f; }
+                    enemy.MaxHealth *= 1 + (Floor.Zone - 1) * 0.14f;
+                    enemy.MoveSpeed = Math.Min(130, enemy.MoveSpeed * (1 + (Floor.Zone - 1) * 0.025f));
                     AddEnemy(enemy, safe[i]);
                 }
             }
@@ -172,7 +175,9 @@ namespace KleinesSpiel.Scripts.Rooms
         {
             if (IsInstanceValid(_boss) && _boss.GetCurrentHealth() > 0)
                 (GetTree().GetFirstNodeInGroup("hud") as UI.HUD)?.ShowBossHealthBar(_boss,
-                    Floor.Zone == 2 ? "Herrscher der Amethyst-Ruinen" : "Wächter der Aschekrypta");
+                    Floor.IsFinal ? Common.Localization.Text("The Castle Regent", "Der Schlossregent")
+                        : Floor.IsCastle ? Common.Localization.Text("Castle Warden", "Schlosswächter")
+                        : Common.Localization.Text("Crypt Guardian", "Kryptenwächter"));
         }
 
         public void CreatePortal()
@@ -185,7 +190,7 @@ namespace KleinesSpiel.Scripts.Rooms
         private void SpawnPortal()
         {
             if (!HasNode("ZonePortal"))
-                AddChild(new ZonePortal { Name = "ZonePortal", SourceRoomId = Definition.Id, Position = new Vector2(512, 360) });
+                AddChild(new ZonePortal { Name = "ZonePortal", SourceRoomId = Definition.Id, DestinationFloor = Floor.Zone + 1, Position = new Vector2(512, 360) });
             _portalQueued = false;
         }
     }

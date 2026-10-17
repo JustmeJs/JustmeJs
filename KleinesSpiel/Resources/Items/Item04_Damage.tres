@@ -6,8 +6,10 @@
 
 [resource]
 script = ExtResource("1")
-ItemName = "Rubinklinge"
-EffectDescription = "Der Schaden all deiner Projektile steigt dauerhaft um 25% - Gegner sterben in weniger Treffern."
+ItemName = "Ruby Blade"
+EffectDescription = "Projectiles deal 25% more damage."
+GermanItemName = "Rubinklinge"
+GermanEffectDescription = "Projektile verursachen 25 % mehr Schaden."
 EffectType = 3
 EffectValue = 25.0
 Icon = ExtResource("art")

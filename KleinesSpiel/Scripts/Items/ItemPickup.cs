@@ -34,12 +34,11 @@ namespace KleinesSpiel.Scripts.Items
 			{
 				_collected = true;
 				SetDeferred("monitoring", false);
-				GD.Print($"ItemPickup: Spieler hat '{Data.ItemName}' aufgesammelt.");
 
 				player.ApplyItemEffect(Data.EffectType, Data.EffectValue);
 
 				var hud = GetTree().GetFirstNodeInGroup("hud") as UI.HUD;
-				hud?.ShowItemPopup(Data.ItemName, Data.EffectDescription);
+				hud?.ShowItemPopup(Data.GetDisplayName(), Data.GetEffectDescription());
 
 				Collected?.Invoke();
 				var motion = GetNodeOrNull<PickupMotion>("Visual");

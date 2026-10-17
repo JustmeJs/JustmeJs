@@ -1,4 +1,5 @@
 using Godot;
+using KleinesSpiel.Scripts.Common;
 
 namespace KleinesSpiel.Scripts.UI
 {
@@ -40,13 +41,13 @@ namespace KleinesSpiel.Scripts.UI
 			{
 				int current = _player.GetCurrentHealthHalfHearts();
 				int max = _player.GetMaxHealthHalfHearts();
-				_healthLabel.Text = $"Leben: {current}/{max}";
+				_healthLabel.Text = Localization.Format("Health: {0}/{1}", "Leben: {0}/{1}", current, max);
 			}
 
 			if (_multiplierLabel != null)
 			{
 				float multiplier = _player.GetDamageMultiplier();
-				_multiplierLabel.Text = $"Multiplikator: x{multiplier:0.0}";
+				_multiplierLabel.Text = Localization.Format("Multiplier: x{0:0.0}", "Multiplikator: x{0:0.0}", multiplier);
 			}
 
 			if (_itemPopupTimer > 0f)
@@ -58,7 +59,7 @@ namespace KleinesSpiel.Scripts.UI
 				}
 			}
 
-			_zoneLabel.Text = $"Zone {Rooms.DungeonManager.Instance.GetZoneIndex()}\n{Rooms.DungeonManager.Instance.GetZoneName()}";
+			_zoneLabel.Text = Localization.Format("Floor {0}/{1}\n{2}", "Ebene {0}/{1}\n{2}", Rooms.DungeonManager.Instance.GetZoneIndex(), Rooms.DungeonFloor.FloorCount, Rooms.DungeonManager.Instance.GetZoneName());
             UpdateBossHealthBar();
 		}
 

@@ -455,6 +455,10 @@ namespace KleinesSpiel.Scripts.Player
 					BaseDamage *= 1f + value / 100f;
 					break;
 
+				case Items.ItemEffectType.ProjectileSpeedPercent:
+					ProjectileSpeed *= 1f + value / 100f;
+					break;
+
 				case Items.ItemEffectType.Piercing:
 					_hasPiercingUpgrade = true;
 					break;

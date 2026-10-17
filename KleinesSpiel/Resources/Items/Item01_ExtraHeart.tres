@@ -6,8 +6,10 @@
 
 [resource]
 script = ExtResource("1")
-ItemName = "Herzmedaillon"
-EffectDescription = "Erhoeht deine maximale Lebensanzeige dauerhaft um ein ganzes Herz und heilt dich sofort um denselben Betrag."
+ItemName = "Heart Medallion"
+EffectDescription = "Gain one full heart container and heal one heart."
+GermanItemName = "Herzmedaillon"
+GermanEffectDescription = "Erhalte einen vollen Herzcontainer und heile ein Herz."
 EffectType = 0
 EffectValue = 2.0
 Icon = ExtResource("art")

@@ -25,16 +25,16 @@ theme_override_constants/separation = 20
 layout_mode = 2
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 36
-text = "Sieg!"
+text = "Victory!"
 
 [node name="RetryButton" type="Button" parent="CenterContainer/VBoxContainer"]
 process_mode = 3
 layout_mode = 2
 custom_minimum_size = Vector2(220, 50)
-text = "Nochmal spielen"
+text = "Play again"
 
 [node name="MenuButton" type="Button" parent="CenterContainer/VBoxContainer"]
 process_mode = 3
 layout_mode = 2
 custom_minimum_size = Vector2(220, 50)
-text = "Zum Hauptmenue"
+text = "Main menu"

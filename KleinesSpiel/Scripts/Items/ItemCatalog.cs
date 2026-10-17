@@ -10,7 +10,8 @@ namespace KleinesSpiel.Scripts.Items
             "res://Resources/Items/Item02_MoveSpeed.tres",
             "res://Resources/Items/Item03_FireRate.tres",
             "res://Resources/Items/Item04_Damage.tres",
-            "res://Resources/Items/Item05_Piercing.tres"
+            "res://Resources/Items/Item05_Piercing.tres",
+            "res://Resources/Items/Item06_ArcaneLens.tres"
         };
         public static ItemData Get(int index) => GD.Load<ItemData>(Paths[index]);
     }

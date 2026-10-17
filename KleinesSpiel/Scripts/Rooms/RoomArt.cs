@@ -7,7 +7,7 @@ namespace KleinesSpiel.Scripts.Rooms
     public partial class RoomArt : Node2D
     {
         [Export] public Color StoneTint = Colors.White;
-        [Export] public bool Amethyst;
+        [Export] public bool Castle;
         [Export] public RoomMapType RoomKind;
         private Texture2D _wall;
         private float _time;
@@ -30,6 +30,7 @@ namespace KleinesSpiel.Scripts.Rooms
         public override void _Draw()
         {
             if (_wall == null) return;
+            if (Castle) DrawCastleFloor();
             foreach (string group in new[] { "Walls", "Obstacles" })
             {
                 var bodies = GetParent().GetNodeOrNull<Node2D>(group);
@@ -57,18 +58,68 @@ namespace KleinesSpiel.Scripts.Rooms
                 if (RoomKind == RoomMapType.Treasure)
                     DrawRect(new Rect2(496,272,32,32), new Color(0.75f,0.6f,0.3f,0.35f));
             }
+            if (Castle)
+            {
+                DrawBanner(new Vector2(402, 73));
+                DrawBanner(new Vector2(622, 73));
+                DrawWindow(new Vector2(282, 160));
+                DrawWindow(new Vector2(742, 160));
+                DrawWindow(new Vector2(282, 390));
+                DrawWindow(new Vector2(742, 390));
+            }
             DrawTorch(new Vector2(352, 67), 0);
             DrawTorch(new Vector2(672, 67), 1.7f);
+        }
+
+        private void DrawCastleFloor()
+        {
+            // Marble and a woven cross runner distinguish the upper castle from the crypt.
+            for (int x = 0; x < 10; x++)
+            for (int y = 0; y < 10; y++)
+            {
+                var at = new Vector2(272 + x * 48, 48 + y * 48);
+                Color tile = (x + y) % 2 == 0 ? new Color(0.29f, 0.28f, 0.25f) : new Color(0.22f, 0.23f, 0.24f);
+                DrawRect(new Rect2(at + Vector2.One, new Vector2(46, 46)), tile);
+                DrawLine(at + new Vector2(5, 35), at + new Vector2(32, 12), new Color(0.55f, 0.52f, 0.43f, 0.1f));
+            }
+            Color cloth = new Color(0.31f, 0.075f, 0.13f);
+            Color trim = new Color(0.65f, 0.48f, 0.2f, 0.8f);
+            DrawRect(new Rect2(482, 64, 60, 448), cloth);
+            DrawRect(new Rect2(288, 258, 448, 60), cloth);
+            DrawRect(new Rect2(486, 68, 52, 440), trim, false, 2);
+            DrawRect(new Rect2(292, 262, 440, 52), trim, false, 2);
+            DrawArc(new Vector2(512, 288), 20, 0, Mathf.Tau, 32, trim, 2);
+        }
+
+        private void DrawBanner(Vector2 at)
+        {
+            DrawRect(new Rect2(at - new Vector2(18, 3), new Vector2(36, 4)), new Color(0.75f, 0.57f, 0.24f));
+            var cloth = new Vector2[] { at + new Vector2(-14, 2), at + new Vector2(14, 2),
+                at + new Vector2(14, 40), at + new Vector2(0, 50), at + new Vector2(-14, 40) };
+            DrawColoredPolygon(cloth, new Color(0.42f, 0.09f, 0.18f));
+            Color gold = new Color(0.88f, 0.68f, 0.3f);
+            DrawLine(at + new Vector2(-9, 16), at + new Vector2(-6, 29), gold, 3);
+            DrawLine(at + new Vector2(9, 16), at + new Vector2(6, 29), gold, 3);
+            DrawLine(at + new Vector2(0, 12), at + new Vector2(0, 29), gold, 3);
+            DrawLine(at + new Vector2(-6, 29), at + new Vector2(6, 29), gold, 3);
+        }
+
+        private void DrawWindow(Vector2 at)
+        {
+            DrawRect(new Rect2(at - new Vector2(8, 24), new Vector2(16, 48)), new Color(0.04f, 0.07f, 0.12f));
+            DrawRect(new Rect2(at - new Vector2(5, 21), new Vector2(10, 42)), new Color(0.29f, 0.58f, 0.72f, 0.8f));
+            DrawLine(at + new Vector2(0, -22), at + new Vector2(0, 22), new Color(0.65f, 0.5f, 0.25f), 2);
+            DrawLine(at + new Vector2(-7, 0), at + new Vector2(7, 0), new Color(0.65f, 0.5f, 0.25f), 2);
         }
 
         private void DrawTorch(Vector2 at, float phase)
         {
             float flicker = Mathf.Sin(_time * 15 + phase);
-            DrawCircle(at, 18 + flicker * 2, Amethyst ? new Color(0.65f, 0.3f, 1, 0.1f) : new Color(1, 0.5f, 0.15f, 0.08f));
+            DrawCircle(at, 18 + flicker * 2, new Color(1, 0.65f, 0.2f, Castle ? 0.16f : 0.08f));
             DrawRect(new Rect2(at + new Vector2(-3, 1), new Vector2(6, 12)), new Color(0.2f, 0.13f, 0.17f));
             DrawRect(new Rect2(at + new Vector2(-5, 1), new Vector2(10, 3)), new Color(0.6f, 0.45f, 0.3f));
-            DrawRect(new Rect2(at + new Vector2(-4, -6 - flicker), new Vector2(8, 8 + flicker)), Amethyst ? new Color(0.6f, 0.25f, 1) : new Color(1, 0.35f, 0.12f));
-            DrawRect(new Rect2(at + new Vector2(-2, -8 + flicker), new Vector2(4, 8 - flicker)), Amethyst ? new Color(0.8f, 0.7f, 1) : new Color(1, 0.85f, 0.35f));
+            DrawRect(new Rect2(at + new Vector2(-4, -6 - flicker), new Vector2(8, 8 + flicker)), new Color(1, Castle ? 0.6f : 0.35f, 0.12f));
+            DrawRect(new Rect2(at + new Vector2(-2, -8 + flicker), new Vector2(4, 8 - flicker)), new Color(1, 0.85f, 0.35f));
             float spark = (_time * 12 + phase * 10) % 14;
             DrawRect(new Rect2(at + new Vector2(Mathf.Sin(_time * 4 + phase) * 4, -9 - spark), Vector2.One * 2),
                 new Color(1, 0.7f, 0.25f, 1 - spark / 14));

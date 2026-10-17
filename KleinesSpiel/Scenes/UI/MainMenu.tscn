@@ -34,7 +34,7 @@ anchor_bottom = 1.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
 layout_mode = 2
-theme_override_constants/separation = 24
+theme_override_constants/separation = 16
 
 [node name="HeroArt" type="TextureRect" parent="CenterContainer/VBoxContainer"]
 script = ExtResource("hero_motion")
@@ -54,4 +54,15 @@ text = "Kleines Spiel"
 [node name="PlayButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
 custom_minimum_size = Vector2(200, 50)
-text = "Spielen"
+text = "Play"
+
+[node name="LanguageButton" type="Button" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(260, 50)
+text = "Language: English"
+
+[node name="HelpLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 15
+text = "Arrow keys: select   Enter / Space: confirm"
