@@ -32,7 +32,16 @@ namespace KleinesSpiel.Scripts.Enemies
 		// hoert auf dieses Event, um zu wissen, wann der Raum leer ist.
 		public event Action<Enemy> Defeated;
 
-		protected float CurrentHealth;
+		public float ShotIntervalMultiplier = 1f;
+        public float ProjectileSpeedMultiplier = 1f;
+        public int CoinDropValue;
+        private float _entryGrace = Difficulty.EntryGraceSeconds;
+        protected bool CanShoot => _entryGrace <= 0;
+        public float GetEntryGraceRemaining() => _entryGrace;
+        public void ResetEntryGrace() => _entryGrace = Difficulty.EntryGraceSeconds;
+        public void ConfigureForFloor(int floor, bool boss = false) => Difficulty.Apply(this, floor, boss);
+
+        protected float CurrentHealth;
 		protected Node2D PlayerReference; // wird bei Bedarf gesucht (fuer Verfolgung/Zielen)
 
 		private float _contactDamageTimer;
@@ -53,6 +62,7 @@ namespace KleinesSpiel.Scripts.Enemies
 		public override void _PhysicsProcess(double delta)
 		{
 			float dt = (float)delta;
+            _entryGrace = Mathf.Max(0, _entryGrace - dt);
 
 			if (_contactDamageTimer > 0f)
 				_contactDamageTimer -= dt;

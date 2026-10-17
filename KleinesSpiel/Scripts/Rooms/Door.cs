@@ -121,12 +121,17 @@ namespace KleinesSpiel.Scripts.Rooms
 
         public override void _Draw()
         {
-            if (TargetKind is not (RoomMapType.Treasure or RoomMapType.Boss)) return;
+            if (TargetKind is not (RoomMapType.Treasure or RoomMapType.Boss or RoomMapType.Shop)) return;
             var inward = -(Vector2)DungeonFloor.Offsets[(int)DoorDirection] * 26;
-            Color color = TargetKind == RoomMapType.Treasure ? new Color(1, 0.8f, 0.3f) : new Color(1, 0.25f, 0.4f);
+            Color color = TargetKind == RoomMapType.Shop ? new Color(0.25f, 1, 0.6f) : TargetKind == RoomMapType.Treasure ? new Color(1, 0.8f, 0.3f) : new Color(1, 0.25f, 0.4f);
             DrawCircle(inward, 7, new Color(0.05f, 0.05f, 0.1f));
             DrawArc(inward, 7, 0, Mathf.Tau, 16, color, 1.5f);
-            if (TargetKind == RoomMapType.Treasure)
+            if (TargetKind == RoomMapType.Shop)
+            {
+                DrawCircle(inward, 3, new Color(1, 0.8f, 0.25f));
+                DrawLine(inward + Vector2.Up * 2, inward + Vector2.Down * 2, new Color(0.3f, 0.2f, 0.1f), 1);
+            }
+            else if (TargetKind == RoomMapType.Treasure)
             {
                 DrawLine(inward - Vector2.One * 3, inward + Vector2.One * 3, color, 2);
                 DrawLine(inward + new Vector2(-3,3), inward + new Vector2(3,-3), color, 2);

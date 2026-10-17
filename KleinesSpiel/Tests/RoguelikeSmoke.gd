@@ -30,7 +30,7 @@ func signature(snapshot: Array) -> String:
 func validate_floor(snapshot: Array, zone: int) -> bool:
  if snapshot.size() != 12: return false
  var indexed := index_graph(snapshot)
- var kinds := {"Start":0, "Normal":0, "Treasure":0, "Boss":0}
+ var kinds := {"Start":0, "Normal":0, "Treasure":0, "Boss":0, "Shop":0}
  var positions := {}
  var layouts := {}
  var start := ""
@@ -46,7 +46,7 @@ func validate_floor(snapshot: Array, zone: int) -> bool:
   if room.kind == "Start": start = room.id
   if room.kind == "Boss": boss = room.id
   if room.kind == "Normal": layouts[room.layout] = true
-  if room.kind in ["Boss", "Treasure"] and room.neighbors.size() != 1: return false
+  if room.kind in ["Boss", "Treasure", "Shop"] and room.neighbors.size() != 1: return false
   for d in room.neighbors:
    var target: String = room.neighbors[d]
    if not indexed.has(target): return false
@@ -54,7 +54,7 @@ func validate_floor(snapshot: Array, zone: int) -> bool:
    if indexed[target].neighbors.get(int(d) ^ 1, "") != room.id: return false
    axes[d] = true
    edge_count += 1
- if kinds != {"Start":1, "Normal":9, "Treasure":1, "Boss":1} or layouts.size() != 6 or axes.size() != 4: return false
+ if kinds != {"Start":1, "Normal":8, "Treasure":1, "Boss":1, "Shop":1} or layouts.size() != 6 or axes.size() != 4: return false
  if edge_count != 22 or indexed[start].neighbors.size() < 2: return false
  var distances := {start:0}
  var queue := [start]
@@ -294,7 +294,7 @@ func run() -> void:
  verify(manager.GetZoneIndex() == 1 and not manager.GetRunFinished(), "Retry creates a fresh first floor")
  player = get_first_node_in_group("player")
  verify(player.GetMaxHealthHalfHearts() == 8 and is_equal_approx(player.MoveSpeed, 150)
-  and is_equal_approx(player.ProjectileSpeed, 300), "Retry resets passive upgrades")
+  and is_equal_approx(player.ProjectileSpeed, 300) and player.GetCoins() == 0, "Retry resets passive upgrades")
  protect_player()
  graph = index_graph(manager.GetFloorSnapshot())
  visited_instances.clear()
@@ -309,4 +309,4 @@ func run() -> void:
 
 func player_stats() -> Array:
  return [player.GetCurrentHealthHalfHearts(), player.GetMaxHealthHalfHearts(), player.MoveSpeed,
-  player.BaseDamage, player.FireCooldownSeconds, player.ProjectileSpeed]
+  player.BaseDamage, player.FireCooldownSeconds, player.ProjectileSpeed, player.GetCoins()]

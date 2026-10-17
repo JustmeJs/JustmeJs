@@ -31,8 +31,8 @@ namespace KleinesSpiel.Scripts.Enemies
 		public override void _Ready()
 		{
 			base._Ready();
-			_phaseTimer = ChasePhaseSeconds;
-			_timeBetweenShots = ShootPhaseSeconds / Mathf.Max(ShotsPerShootPhase, 1f);
+			_phaseTimer = ChasePhaseSeconds * ShotIntervalMultiplier;
+			_timeBetweenShots = ShootPhaseSeconds / Mathf.Max(ShotsPerShootPhase, 1f) * ShotIntervalMultiplier;
 		}
 
 		protected override void UpdateBehavior(float dt)
@@ -55,7 +55,7 @@ namespace KleinesSpiel.Scripts.Enemies
 				Velocity = Vector2.Zero;
 
 				_shotTimer -= dt;
-				if (_shotTimer <= 0f)
+				if (CanShoot && _shotTimer <= 0f)
 				{
 					ShootFourWays();
 					_shotTimer = _timeBetweenShots;
@@ -64,7 +64,7 @@ namespace KleinesSpiel.Scripts.Enemies
 				if (_phaseTimer <= 0f)
 				{
 					_currentPhase = Phase.Chasing;
-					_phaseTimer = ChasePhaseSeconds;
+					_phaseTimer = ChasePhaseSeconds * ShotIntervalMultiplier;
 				}
 			}
 		}
@@ -92,7 +92,7 @@ namespace KleinesSpiel.Scripts.Enemies
 
 				if (projectileInstance is Projectiles.Projectile projectile)
 				{
-					projectile.Launch(direction, ProjectileSpeed, ProjectileDamage);
+					projectile.Launch(direction, ProjectileSpeed * ProjectileSpeedMultiplier, ProjectileDamage);
 				}
 			}
 		}

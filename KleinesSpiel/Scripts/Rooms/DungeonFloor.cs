@@ -15,6 +15,9 @@ namespace KleinesSpiel.Scripts.Rooms
         public int ItemIndex = -1;
         public bool Cleared;
         public bool TreasureCollected;
+        public int ShopItemIndex;
+        public bool ShopPassiveSold;
+        public readonly bool[] ShopHeartsSold = new bool[2];
         public readonly Dictionary<Door.Direction, string> Neighbors = new();
     }
 
@@ -62,7 +65,7 @@ namespace KleinesSpiel.Scripts.Rooms
                 if (cells.Count != RoomCount || cells.Min(p => p.X) >= 0 || cells.Max(p => p.X) <= 0
                     || cells.Min(p => p.Y) >= 0 || cells.Max(p => p.Y) <= 0) continue;
                 var leaves = cells.Where(p => p != Vector2I.Zero && Offsets.Count(d => cells.Contains(p + d)) == 1).ToList();
-                if (leaves.Count < 2) continue;
+                if (leaves.Count < 3) continue;
                 var distances = new Dictionary<Vector2I, int> { [Vector2I.Zero] = 0 };
                 var queue = new Queue<Vector2I>();
                 queue.Enqueue(Vector2I.Zero);
@@ -82,6 +85,7 @@ namespace KleinesSpiel.Scripts.Rooms
                 leaves.Remove(boss);
                 Shuffle(leaves, random);
                 var treasures = leaves.Take(1).ToHashSet();
+                var shop = leaves[1];
                 var layouts = Enumerable.Range(0, 6).ToList();
                 Shuffle(layouts, random);
                 var floor = new DungeonFloor { Zone = zone, StartId = Id(zone, Vector2I.Zero), BossId = Id(zone, boss) };
@@ -98,12 +102,13 @@ namespace KleinesSpiel.Scripts.Rooms
                 foreach (var position in cells.OrderBy(p => p.Y).ThenBy(p => p.X))
                 {
                     var kind = position == Vector2I.Zero ? RoomMapType.Start : position == boss ? RoomMapType.Boss
-                        : treasures.Contains(position) ? RoomMapType.Treasure : RoomMapType.Normal;
+                        : treasures.Contains(position) ? RoomMapType.Treasure : position == shop ? RoomMapType.Shop : RoomMapType.Normal;
                     var definition = new RoomDefinition
                     {
                         Id = Id(zone, position), Position = position, Kind = kind,
                         Layout = kind == RoomMapType.Normal ? layouts[normalIndex++ % layouts.Count] : 0,
                         ContentSeed = random.Next(),
+                        ShopItemIndex = Items.Economy.ShopItem(random),
                     };
                     for (int d = 0; d < 4; d++)
                         if (cells.Contains(position + Offsets[d])) definition.Neighbors[(Door.Direction)d] = Id(zone, position + Offsets[d]);

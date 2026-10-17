@@ -104,7 +104,9 @@ func run() -> void:
   await frames(20)
   verify(not is_instance_valid(enemy), name + " death cleans up node")
 
- # Real firing behaviors, rather than just calling the presentation helper.
+ # Real firing behaviors, after the room-entry grace interval.
+ var player_layer: int = player.collision_layer
+ player.collision_layer = 0
  for name in ["EnemyRanged", "EnemyFourWay", "Boss", "BossRanged", "BossFourWay"]:
   var enemy = load("res://Scenes/Enemies/" + name + ".tscn").instantiate()
   if name == "Boss": enemy.ChasePhaseSeconds = 0.01
@@ -112,10 +114,13 @@ func run() -> void:
   enemy.position = Vector2(650, 150)
   enemy.collision_layer = 0
   enemy.collision_mask = 0
-  await frames(3)
-  verify(enemy.get_node("Visual").GetAnimationState() == "attack", name + " actual shot triggers attack")
+  for frame in range(180):
+   await frames(1)
+   if enemy.get_node("Visual").GetAnimationState() == "attack": break
+  verify(enemy.get_node("Visual").GetAnimationState() == "attack", name + " actual shot triggers attack after entry delay")
   enemy.queue_free()
   await frames(2)
+ player.collision_layer = player_layer
  # Remove projectiles from the firing checks before collection checks.
  for node in game.get_children():
   if node is Area2D:

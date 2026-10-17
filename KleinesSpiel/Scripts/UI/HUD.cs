@@ -6,6 +6,7 @@ namespace KleinesSpiel.Scripts.UI
 	public partial class HUD : CanvasLayer
 	{
 		private Label _healthLabel;
+        private Label _coinsLabel;
         private Label _zoneLabel;
 		private Label _multiplierLabel;
 		private Label _itemPopupLabel;
@@ -26,6 +27,9 @@ namespace KleinesSpiel.Scripts.UI
             _zoneLabel = new Label { Position = new Vector2(16, 300), Size = new Vector2(235, 90),
                 AutowrapMode = TextServer.AutowrapMode.WordSmart };
             AddChild(_zoneLabel);
+            _coinsLabel = new Label { Name = "CoinsLabel", Position = new Vector2(16, 263) };
+            _coinsLabel.AddThemeColorOverride("font_color", new Color(1, 0.82f, 0.3f));
+            AddChild(_coinsLabel);
 		}
 
 		public override void _Process(double delta)
@@ -60,6 +64,7 @@ namespace KleinesSpiel.Scripts.UI
 			}
 
 			_zoneLabel.Text = Localization.Format("Floor {0}/{1}\n{2}", "Ebene {0}/{1}\n{2}", Rooms.DungeonManager.Instance.GetZoneIndex(), Rooms.DungeonFloor.FloorCount, Rooms.DungeonManager.Instance.GetZoneName());
+            _coinsLabel.Text = Localization.Format("Coins: {0}", "Münzen: {0}", _player.GetCoins());
             UpdateBossHealthBar();
 		}
 

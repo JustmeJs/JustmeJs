@@ -37,10 +37,10 @@ namespace KleinesSpiel.Scripts.Enemies
 			}
 
 			_fireCooldownTimer -= dt;
-			if (_fireCooldownTimer <= 0f && PlayerReference != null)
+			if (CanShoot && _fireCooldownTimer <= 0f && PlayerReference != null)
 			{
 				Shoot(directionToPlayer);
-				_fireCooldownTimer = FireCooldownSeconds;
+				_fireCooldownTimer = FireCooldownSeconds * ShotIntervalMultiplier;
 			}
 		}
 
@@ -57,7 +57,7 @@ namespace KleinesSpiel.Scripts.Enemies
 
 			if (projectileInstance is Projectiles.Projectile projectile)
 			{
-				projectile.Launch(direction, ProjectileSpeed, ProjectileDamage);
+				projectile.Launch(direction, ProjectileSpeed * ProjectileSpeedMultiplier, ProjectileDamage);
 			}
 		}
 	}

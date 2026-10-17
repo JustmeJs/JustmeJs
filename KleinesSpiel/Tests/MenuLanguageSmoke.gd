@@ -134,6 +134,7 @@ func run() -> void:
   var hud = get_first_node_in_group("hud")
   verify(hud.get_node("HealthLabel").text.begins_with("Health:" if language == "en" else "Leben:"), "HUD health uses " + language)
   verify(hud.get_node("MultiplierLabel").text.begins_with("Multiplier:" if language == "en" else "Multiplikator:"), "HUD multiplier uses " + language)
+  verify(hud.get_node("CoinsLabel").text.begins_with("Coins:" if language == "en" else "Münzen:"), "Coin balance uses " + language)
   var item = load("res://Scenes/Items/ItemPickup.tscn").instantiate()
   var item_data = load(ITEM_PATHS[3])
   item.Data = item_data

@@ -94,6 +94,7 @@ namespace KleinesSpiel.Scripts.Enemies
 
         private void UpdateAttack(float dt)
         {
+            if (!CanShoot) return;
             if (_pattern == Pattern.Charge)
             {
                 // Fixed arena bounds keep a missed charge away from doorways even
@@ -124,7 +125,7 @@ namespace KleinesSpiel.Scripts.Enemies
             if (_pattern == Pattern.Fan) FireFan();
             else FireRing();
             _volley++;
-            _shotTimer = _pattern == Pattern.Fan ? (_combatPhase == 2 ? 0.32f : 0.43f) : 0.55f;
+            _shotTimer = (_pattern == Pattern.Fan ? (_combatPhase == 2 ? 0.32f : 0.43f) : 0.55f) * ShotIntervalMultiplier;
         }
 
         private void FireFan()
@@ -163,7 +164,7 @@ namespace KleinesSpiel.Scripts.Enemies
             projectile.GlobalPosition = GlobalPosition + direction * 37f;
             projectile.Modulate = _pattern == Pattern.Ring
                 ? new Color(0.8f, 0.65f, 1f) : new Color(1f, 0.82f, 0.45f);
-            projectile.Launch(direction, speed, ProjectileDamage);
+            projectile.Launch(direction, speed * ProjectileSpeedMultiplier, ProjectileDamage);
             _totalShots++;
         }
 

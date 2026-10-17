@@ -58,6 +58,14 @@ namespace KleinesSpiel.Scripts.Rooms
                 if (RoomKind == RoomMapType.Treasure)
                     DrawRect(new Rect2(496,272,32,32), new Color(0.75f,0.6f,0.3f,0.35f));
             }
+            if (RoomKind == RoomMapType.Shop)
+            {
+                DrawRect(new Rect2(320, 240, 384, 125), new Color(0.08f, 0.23f, 0.17f, 0.9f));
+                DrawRect(new Rect2(326, 246, 372, 113), new Color(0.75f, 0.57f, 0.23f), false, 2);
+                DrawCircle(new Vector2(512, 100), 15, new Color(0.95f, 0.7f, 0.15f));
+                DrawArc(new Vector2(512, 100), 11, 0, Mathf.Tau, 24, new Color(0.45f, 0.27f, 0.07f), 2);
+                DrawLine(new Vector2(512, 93), new Vector2(512, 107), new Color(1, 0.94f, 0.6f), 3);
+            }
             if (Castle)
             {
                 DrawBanner(new Vector2(402, 73));

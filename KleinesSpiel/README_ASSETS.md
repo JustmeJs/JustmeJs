@@ -7,7 +7,7 @@
 3. Compila con Build del editor o `dotnet build` desde esta carpeta.
 4. Pulsa **F5** y elige **Play**.
 
-WASD: movimiento. Flechas: disparo. Espacio: dash. Escape: pausa.
+WASD: movimiento. Flechas: disparo. Espacio: dash. Escape: pausa. E: comprar al acercarse a un expositor de la tienda.
 
 En todos los menús puedes seleccionar con cualquiera de las cuatro flechas, confirmar con Enter/Espacio o usar el ratón. La primera opción recibe el foco al abrirlos y la navegación vuelve al inicio al llegar al final. Espacio al confirmar no activa el dash al regresar al juego.
 
@@ -25,7 +25,7 @@ El juego empieza en inglés. El botón de idioma del menú principal alterna ing
 | 4–5 | Castle / Schloss | Jefe más resistente y portal garantizado. |
 | 6 | Castle / Schloss | The Castle Regent / Der Schlossregent; su derrota termina en victoria. |
 
-Cada nivel genera un árbol conectado de 12 habitaciones en una cuadrícula de 5 × 5: una entrada, nueve salas de combate, un tesoro y una sala de jefe. Las conexiones pueden ir arriba, abajo, izquierda y derecha. El jefe ocupa uno de los extremos más alejados de la entrada. Las salas de combate distribuyen seis variantes de obstáculos; aparecen todas en cada nivel. También varían la mezcla y posición de los enemigos.
+Cada nivel genera un árbol conectado de 12 habitaciones en una cuadrícula de 5 × 5: una entrada, ocho salas de combate, un tesoro, una tienda y una sala de jefe. Las conexiones pueden ir arriba, abajo, izquierda y derecha. El jefe ocupa uno de los extremos más alejados de la entrada. Las salas de combate distribuyen seis variantes de obstáculos; aparecen todas en cada nivel. También varían la mezcla y posición de los enemigos.
 
 Las puertas bloquean el paso durante el combate y se abren al eliminar a todos los enemigos. Las habitaciones se conservan durante la exploración del mismo nivel: volver no regenera enemigos ni tesoros recogidos, y mantiene los corazones que hayan quedado. El minimapa revela las habitaciones descubiertas. Al pasar por un portal se conservan vida, jugador y mejoras; el mapa y las salas se sustituyen por los del siguiente nivel.
 
@@ -39,9 +39,9 @@ El autoload `DungeonManager` expone `SeedOverride`: 0 elige una semilla aleatori
 
 [Portal de la cripta al castillo](Documentation/zone_portal.png) · [Vista previa de la progresión](Documentation/roguelike_preview.gif)
 
-## Un pasivo por nivel
+## Un pasivo gratuito por nivel y mejoras de tienda
 
-La partida baraja seis mejoras y reparte exactamente una por nivel, sin repetición. Cada una tiene un icono distinto que representa su efecto. El objeto mostrado, el texto traducido y la mejora proceden del mismo recurso `ItemData`.
+La partida baraja seis mejoras gratuitas de tesoro y reparte exactamente una por nivel, sin repetición. Cada tienda vende además un pasivo acumulable; puede repetir una mejora, que vuelve a aumentar la estadística. La tienda excluye la penetración, cuyo efecto no se acumula. Cada una tiene un icono distinto que representa su efecto. El objeto mostrado, el texto traducido y la mejora proceden del mismo recurso `ItemData`.
 
 | Icono / objeto | Efecto |
 | --- | --- |
@@ -55,6 +55,31 @@ La partida baraja seis mejoras y reparte exactamente una por nivel, sin repetici
 ![Iconos y efectos](Documentation/passive_items.png)
 
 La hoja y la punta representan mejoras pasivas; el mago sigue llevando su vara. La lente nueva usa un SVG propio, con un rayo y trazos de velocidad, y se presenta al mismo tamaño que los demás objetos.
+
+## Tienda, moneda y dificultad progresiva
+
+Cada nivel tiene una tienda en un extremo del mapa. Su puerta y su casilla descubierta usan un distintivo verde. No hay enemigos en la tienda. Ofrece dos corazones completos a 3 monedas por unidad y un pasivo a 15. El stock se agota al comprar, no se repone al salir y entrar, y se renueva al avanzar al siguiente nivel. El pasivo muestra su efecto antes de confirmar con E.
+
+Los enemigos normales tiran una moneda con probabilidad del 35 %. Los cinco jefes intermedios dejan una pila de tres monedas. Las monedas se recogen por contacto una sola vez y las no recogidas permanecen en la sala. El monedero, limitado a 99, se conserva entre niveles; reiniciar la partida lo pone a cero. No se puede comprar sin saldo, estando en pausa o muerto. Comprar un corazón con la vida completa no gasta monedas ni consume stock.
+
+![Tienda de la cripta](Documentation/shop.png)
+
+[Tienda en el castillo](Documentation/castle_shop.png) · [Economía y muestra de equilibrio](Documentation/ECONOMY.md)
+
+Todos los enemigos con proyectiles, incluidos los jefes, tienen una protección de entrada de **1,5 s** durante la cual no disparan. El temporizador no avanza durante la pausa y se restablece al reactivar una sala. Después se aplica la cadencia del enemigo o su patrón de jefe. La protección impide disparos; los enemigos pueden moverse durante ese intervalo.
+
+| Nivel | Velocidad de movimiento | Intervalo entre disparos | Velocidad de proyectil |
+| --- | --- | --- | --- |
+| 1 | ×0,80 | ×1,45 | ×0,75 |
+| 2 | ×0,86 | ×1,32 | ×0,81 |
+| 3 | ×0,92 | ×1,19 | ×0,87 |
+| 4 | ×0,98 | ×1,06 | ×0,93 |
+| 5 | ×1,04 | ×0,93 | ×0,99 |
+| 6 | ×1,10 | ×0,80 | ×1,05 |
+
+Los multiplicadores se aplican a los valores base de cada tipo. Un intervalo menor significa disparos más frecuentes. El movimiento normal se limita a 130 px/s, por debajo de los 150 px/s iniciales del jugador; las embestidas avisadas del Regente mantienen sus propias velocidades. Se conservan el crecimiento gradual de vida y cantidad de enemigos y los avisos de sus ataques.
+
+Los melee utilizan una cuadrícula A* con espacio para su cuerpo alrededor de los obstáculos. Avanzan hacia el punto visible más lejano de la ruta y recalculan cada 0,2 s o al chocar. También pueden salir de una posición pegada al borde de una estructura; el margen de navegación no los deja atrapados.
 
 ## Contacto cuerpo a cuerpo y jefe final
 
@@ -85,7 +110,10 @@ La prioridad de estados es muerte, daño, dash, ataque, movimiento y reposo. Al 
 - `Scripts/Rooms/DungeonFloor.cs`: generación por semilla y elección de habitaciones/jefe.
 - `DungeonManager.cs`: partida, caché de habitaciones y progresión de seis niveles.
 - `Room.cs`, `RoomLayouts.cs`, `RoomArt.cs` y `ZonePortal.cs`: contenido, geometría, entornos y portales.
-- `Scripts/Enemies/Enemy.cs`: combate y separación después del contacto.
+- `Scripts/Enemies/Enemy.cs`: combate, protección inicial y separación después del contacto.
+- `Scripts/Enemies/Difficulty.cs`: escalado de movimiento, cadencia y proyectiles.
+- `Scripts/Rooms/RoomNavigation.cs` y `Scripts/Enemies/EnemyMelee.cs`: rutas alrededor de obstáculos.
+- `Scripts/Items/Economy.cs`, `CoinPickup.cs` y `ShopOffer.cs`: precios, moneda y compras.
 - `Scripts/Enemies/CastleBoss.cs`: ataques, fases y presentación del jefe final.
 - `Scripts/Items/ItemCatalog.cs` y `Resources/Items/`: seis mejoras, iconos y textos en ambos idiomas.
 - `Assets/Sprites/hero_mage_directional.png` y `hero_mage_manifest.json`: atlas y regiones del mago.
@@ -102,6 +130,9 @@ Desde esta carpeta, con Godot **.NET** y .NET SDK 8 en PATH:
 dotnet build
 godot --headless --editor --path . --quit
 godot --headless --fixed-fps 60 --path . --script res://Tests/RoguelikeSmoke.gd
+godot --headless --fixed-fps 60 --path . --script res://Tests/CombatSafetySmoke.gd
+godot --headless --fixed-fps 60 --path . --script res://Tests/EconomySmoke.gd
+godot --headless --fixed-fps 60 --path . --script res://Tests/LootBalanceSmoke.gd
 godot --headless --fixed-fps 60 --path . --script res://Tests/MenuLanguageSmoke.gd
 godot --headless --fixed-fps 60 --path . --script res://Tests/MeleeContactSmoke.gd
 godot --headless --fixed-fps 60 --path . --script res://Tests/FinalBossSmoke.gd
@@ -109,8 +140,8 @@ godot --headless --fixed-fps 60 --path . --script res://Tests/AnimationSmoke.gd
 godot --headless --fixed-fps 60 --path . --script res://Tests/MageCastingSmoke.gd
 ```
 
-Las pruebas comprueban 1.200 mapas, puertas físicas en las cuatro direcciones, recorrido de los seis niveles, un objeto distinto por nivel, transición de entorno en el cuarto, conservación de mejoras, portales garantizados, victoria y reinicio. Las pruebas de menú envían teclas reales y arrancan procesos nuevos de Godot para comprobar la persistencia. Las pruebas de combate comprueban separación física, paredes, invulnerabilidad y los tres ataques del jefe final, incluyendo contacto real durante su embestida.
+Las pruebas comprueban 1.200 mapas con una tienda y un tesoro por nivel, puertas físicas en las cuatro direcciones, recorrido de los seis niveles, un objeto distinto por nivel, transición de entorno en el cuarto, conservación de mejoras, portales garantizados, victoria y reinicio. Las pruebas de menú envían teclas reales y arrancan procesos nuevos de Godot para comprobar la persistencia. Las pruebas de combate comprueban separación física, paredes, invulnerabilidad y los tres ataques del jefe final, incluyendo contacto real durante su embestida. Las nuevas pruebas cubren la espera de 1,5 s en los seis tipos de enemigo con proyectiles, la pausa del temporizador, dificultad creciente y rutas físicas en las seis variantes de sala. Comprueban monedas recogidas una sola vez, compras con E, saldo insuficiente, rechazo de curación con vida completa, stock agotado, revisitas, pausa y transición de nivel. Una muestra de 90 niveles y 2.151 enemigos valida la proporción de monedas.
 
 Desde la raíz del repositorio, `python3 Tools/audit_assets.py` comprueba referencias, recursos visuales sin uso y seis iconos/efectos distintos. El paquete excluye `.godot`, metadatos `.import` regenerables y compilados; contiene entradas de carpetas para Godot. Antes de distribuirlo se valida extracción, compilación y pruebas desde una copia limpia.
 
-Las pruebas de progresión y las vistas previas usan derrotas controladas y protección del jugador; no equivalen a una partida completa ganada sin asistencia.
+Las pruebas de progresión y las vistas previas usan derrotas controladas, protección del jugador y fondos de prueba para las compras; no equivalen a una partida completa ganada sin asistencia.

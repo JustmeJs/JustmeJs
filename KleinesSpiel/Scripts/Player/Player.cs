@@ -55,7 +55,23 @@ namespace KleinesSpiel.Scripts.Player
 		// Interner Zustand (wird waehrend des Spiels veraendert)
 		// ---------------------------------------------------------
 
-		private int _currentHealthHalfHearts;
+		private int _coins;
+        public int GetCoins() => _coins;
+        public int AddCoins(int amount)
+        {
+            if (amount <= 0) return 0;
+            int added = Mathf.Min(amount, Items.Economy.WalletLimit - _coins);
+            _coins += added;
+            return added;
+        }
+        public bool TrySpendCoins(int price)
+        {
+            if (price <= 0 || _coins < price) return false;
+            _coins -= price;
+            return true;
+        }
+
+        private int _currentHealthHalfHearts;
 		private Direction4 _facingDirection = Direction4.Down;
 
 		private float _fireCooldownTimer;

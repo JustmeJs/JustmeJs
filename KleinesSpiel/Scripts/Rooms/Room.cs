@@ -12,6 +12,10 @@ namespace KleinesSpiel.Scripts.Rooms
         private int _alive;
         private Enemies.Enemy _boss;
         private bool _portalQueued;
+        private RoomNavigation _navigation;
+        private Random _lootRandom;
+        public Vector2 GetEnemyWaypoint(Vector2 from, Vector2 target, float radius)
+            => (_navigation ??= new RoomNavigation(Definition.Layout)).Waypoint(from, target, radius);
         public bool IsCleared() => Definition.Cleared;
         public string GetRoomId() => Definition.Id;
         public string GetRoomKind() => Definition.Kind.ToString();
@@ -20,6 +24,7 @@ namespace KleinesSpiel.Scripts.Rooms
 
         public override void _Ready()
         {
+            _lootRandom = new Random(Definition.ContentSeed ^ 0x51c01);
             BuildGeometry();
             BuildDoors();
             _enemies = new Node2D { Name = "Enemies" };
@@ -119,12 +124,24 @@ namespace KleinesSpiel.Scripts.Rooms
                 pickup.Collected += () => Definition.TreasureCollected = true;
                 AddChild(pickup);
             }
+            if (Definition.Kind == RoomMapType.Shop)
+            {
+                var stock = new Node2D { Name = "ShopStock" };
+                AddChild(stock);
+                for (int i = 0; i < 3; i++)
+                    stock.AddChild(new Items.ShopOffer { Name = $"Offer{i}", Stock = Definition, Slot = i,
+                        Position = new Vector2(368 + i * 144, 288) });
+                var title = new Label { Name = "ShopLabel", Position = new Vector2(310, 135), Size = new Vector2(404, 85),
+                    HorizontalAlignment = HorizontalAlignment.Center, AutowrapMode = TextServer.AutowrapMode.WordSmart,
+                    Text = Common.Localization.Text("SHOP\nApproach an offer and press E to buy.\nTwo hearts and one passive. No restocks.",
+                        "LADEN\nNähere dich einem Angebot und kaufe mit E.\nZwei Herzen und ein passiver Gegenstand.") };
+                AddChild(title);
+            }
             if (Definition.Cleared) return;
             var random = new Random(Definition.ContentSeed);
             if (Definition.Kind == RoomMapType.Boss)
             {
                 _boss = GD.Load<PackedScene>(Floor.BossScene).Instantiate<Enemies.Enemy>();
-                if (!Floor.IsFinal) _boss.MaxHealth *= 1 + (Floor.Zone - 1) * 0.18f;
                 AddEnemy(_boss, new Vector2(512, Floor.IsFinal ? 288 : 200));
                 RefreshBossHud();
             }
@@ -141,8 +158,6 @@ namespace KleinesSpiel.Scripts.Rooms
                 for (int i = 0; i < count; i++)
                 {
                     var enemy = GD.Load<PackedScene>(types[random.Next(types.Length)]).Instantiate<Enemies.Enemy>();
-                    enemy.MaxHealth *= 1 + (Floor.Zone - 1) * 0.14f;
-                    enemy.MoveSpeed = Math.Min(130, enemy.MoveSpeed * (1 + (Floor.Zone - 1) * 0.025f));
                     AddEnemy(enemy, safe[i]);
                 }
             }
@@ -150,6 +165,9 @@ namespace KleinesSpiel.Scripts.Rooms
 
         private void AddEnemy(Enemies.Enemy enemy, Vector2 position)
         {
+            bool boss = Definition.Kind == RoomMapType.Boss;
+            enemy.ConfigureForFloor(Floor.Zone, boss);
+            enemy.CoinDropValue = boss ? (Floor.IsFinal ? 0 : Items.Economy.BossCoins) : Items.Economy.EnemyDrop(_lootRandom);
             enemy.Position = position;
             enemy.Defeated += OnDefeated;
             _alive++;
@@ -158,6 +176,8 @@ namespace KleinesSpiel.Scripts.Rooms
 
         private void OnDefeated(Enemies.Enemy enemy)
         {
+            if (enemy.CoinDropValue > 0)
+                CallDeferred(nameof(SpawnCoin), enemy.Position, enemy.CoinDropValue);
             _alive--;
             if (_alive != 0 || Definition.Cleared) return;
             Definition.Cleared = true;
@@ -165,10 +185,21 @@ namespace KleinesSpiel.Scripts.Rooms
             DungeonManager.Instance?.OnRoomCleared(this);
         }
 
+        private void SpawnCoin(Vector2 position, int value)
+        {
+            AddChild(new Items.CoinPickup { Name = "Coin", Position = position, Value = value });
+        }
+
         private void SetDoors(bool open)
         {
             foreach (var child in GetNode("Doors").GetChildren())
                 if (child is Door door) { if (open) door.SetOpen(); else door.SetClosed(); }
+        }
+
+        public void OnPlayerEntered()
+        {
+            foreach (var node in _enemies.GetChildren())
+                if (node is Enemies.Enemy enemy) enemy.ResetEntryGrace();
         }
 
         public void RefreshBossHud()

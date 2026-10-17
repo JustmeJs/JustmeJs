@@ -8,6 +8,7 @@ namespace KleinesSpiel.Scripts.Rooms
 		Normal,
 		Treasure,
 		Boss,
+        Shop,
 	}
 
 	// Ein Eintrag pro bekannter Sala in der Minimap. "Visited" unterscheidet

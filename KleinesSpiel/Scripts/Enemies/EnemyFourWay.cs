@@ -39,10 +39,10 @@ namespace KleinesSpiel.Scripts.Enemies
 			Velocity = _wanderDirection * MoveSpeed * WanderSpeedFactor;
 
 			_fireCooldownTimer -= dt;
-			if (_fireCooldownTimer <= 0f)
+			if (CanShoot && _fireCooldownTimer <= 0f)
 			{
 				ShootFourWays();
-				_fireCooldownTimer = FireCooldownSeconds;
+				_fireCooldownTimer = FireCooldownSeconds * ShotIntervalMultiplier;
 			}
 		}
 
@@ -69,7 +69,7 @@ namespace KleinesSpiel.Scripts.Enemies
 
 				if (projectileInstance is Projectiles.Projectile projectile)
 				{
-					projectile.Launch(direction, ProjectileSpeed, ProjectileDamage);
+					projectile.Launch(direction, ProjectileSpeed * ProjectileSpeedMultiplier, ProjectileDamage);
 				}
 			}
 		}

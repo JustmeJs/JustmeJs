@@ -155,6 +155,7 @@ namespace KleinesSpiel.Scripts.Rooms
             // Ignore stale overlap signals from the room's previous activation.
             _arrivalFrames = 3;
             _roomContainer.AddChild(room);
+            room.OnPlayerEntered();
             _player.OnEnteredNewRoom();
             Hud()?.HideBossHealthBar();
             room.RefreshBossHud();
@@ -250,6 +251,7 @@ namespace KleinesSpiel.Scripts.Rooms
                     ["id"] = room.Id, ["position"] = room.Position, ["kind"] = room.Kind.ToString(),
                     ["layout"] = room.Layout, ["neighbors"] = neighbors, ["cleared"] = room.Cleared,
                     ["collected"] = room.TreasureCollected, ["item"] = room.ItemIndex,
+                    ["shop_item"] = room.ShopItemIndex, ["shop_sold"] = room.ShopPassiveSold,
                     ["boss_scene"] = floor.BossScene, ["theme"] = floor.Theme, ["floor"] = floor.Zone
                 });
             }

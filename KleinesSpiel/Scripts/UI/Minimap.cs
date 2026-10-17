@@ -93,7 +93,8 @@ namespace KleinesSpiel.Scripts.UI
 			{
 				Rooms.RoomMapType.Start => new Color(0.3f, 0.6f, 0.95f, 1f),
 				Rooms.RoomMapType.Treasure => new Color(1f, 0.85f, 0.2f, 1f),
-				Rooms.RoomMapType.Boss => new Color(0.85f, 0.15f, 0.15f, 1f),
+				Rooms.RoomMapType.Shop => new Color(0.25f, 0.85f, 0.6f),
+                Rooms.RoomMapType.Boss => new Color(0.85f, 0.15f, 0.15f, 1f),
 				_ => new Color(0.8f, 0.8f, 0.85f, 1f),
 			};
 		}
