@@ -9,6 +9,8 @@
 
 WASD: movimiento. Flechas: disparo. Espacio: dash. Escape: pausa. E: comprar al acercarse a un expositor de la tienda.
 
+Arranca a pantalla completa y se adapta al monitor, incluido Full HD (1920 × 1080). Salas y menús mantienen su proporción 16:9; otras proporciones usan bandas para evitar recortes. Si el editor incrusta el juego en su panel, ejecútalo en una ventana independiente para ver la pantalla completa.
+
 En todos los menús puedes seleccionar con cualquiera de las cuatro flechas, confirmar con Enter/Espacio o usar el ratón. La primera opción recibe el foco al abrirlos y la navegación vuelve al inicio al llegar al final. Espacio al confirmar no activa el dash al regresar al juego.
 
 El juego empieza en inglés. El botón de idioma del menú principal alterna inglés y alemán y actualiza el texto inmediatamente. La preferencia se guarda en `user://settings.cfg`, fuera del proyecto, y se conserva al reiniciar. Los menús, HUD, instrucciones, nombres de niveles, portales, jefes y objetos se muestran en el idioma elegido. El título propio sigue siendo «Kleines Spiel».

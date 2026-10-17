@@ -23,6 +23,9 @@ project/assembly_name="KleinesSpiel"
 
 window/size/viewport_width=1024
 window/size/viewport_height=576
+window/size/window_width_override=1920
+window/size/window_height_override=1080
+window/size/mode=3
 window/stretch/mode="viewport"
 window/stretch/aspect="keep"
 

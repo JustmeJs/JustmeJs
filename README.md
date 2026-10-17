@@ -26,6 +26,10 @@ En el sexto nivel espera **The Castle Regent**, un jefe de 140 puntos de vida co
 
 La vista previa usa encuentros, derrotas y monedas de demostración controladas para mostrar la progresión y las compras.
 
+## Pantalla completa
+
+El juego arranca a pantalla completa y se adapta a la resolución del monitor, incluido Full HD (1920 × 1080). Conserva el diseño 16:9 de las salas y los menús; en monitores con otra proporción aparecen bandas para evitar deformaciones o recortes. La ventana, si se fuerza desde el editor, tiene un tamaño previsto de 1920 × 1080.
+
 ## Tiendas, monedas y dificultad
 
 Los enemigos normales tienen un **35 %** de probabilidad de soltar una moneda; los cinco jefes intermedios dan **3 monedas**. Cada tienda vende dos corazones completos a **3 monedas cada uno** y una mejora pasiva a **15**. Acércate y pulsa **E**: los precios y el efecto aparecen antes de comprar. No se cobra curación si ya tienes toda la vida. El dinero y las compras se conservan al volver a una sala; el monedero llega hasta 99 y se reinicia con la partida.
