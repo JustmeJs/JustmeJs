@@ -109,4 +109,5 @@ func run() -> void:
  verify(followed, "Melee recalculates its route when the player changes sides")
  stuck.queue_free()
  print("COMBAT SAFETY CHECKS: ", passed, " passed; ", failed, " failed")
+ await preload("res://Tests/AudioTestCleanup.gd").drain(self)
  quit(1 if failed else 0)

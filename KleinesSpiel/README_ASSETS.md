@@ -1,5 +1,27 @@
 # Kleines Spiel — juego, assets y validación
 
+## Actualización de combate, sonido y exploración
+
+- **Una tienda garantizada por nivel**, marcada desde el inicio con una moneda verde en el minimapa. Dos corazones a 3 monedas y un pasivo a 15; compra con E.
+- Los arqueros disparan **flechas orientadas**. El castillo usa arqueros humanos, caballeros, hechiceros y guardianes acorazados; la cripta conserva sus criaturas. Los invocadores y zombis llevan hábitos de culto distintos en cada zona, con movimiento, ataque, daño y derrota animados.
+- El **invocador no ataca ni hace daño por contacto**. Cada cinco segundos intenta crear un zombi más rápido que el melee habitual, en una posición libre y alejada del jugador. Hay un máximo de cuatro zombis vivos por sala; no dan monedas ni corazones y deben derrotarse para abrir las puertas.
+- El jefe melee se detiene, tiembla y marca una línea antes de embestir hacia la posición fijada del jugador. El Castle Warden alterna cruz y X; cada sexta ráfaga forma un anillo con un hueco para escapar.
+- El Regent reduce los avisos de abanico/embestida a 0,40/0,45 segundos (0,33/0,38 en fase dos), aumenta el abanico y el tamaño y alcance de la embestida. Su anillo tiene una animación de 0,18 segundos, sin marcas de aviso sobre el suelo, y conserva un hueco para esquivarlo.
+- Corazones de suelo y tienda más pequeños. Curación aleatoria: **5 %** por enemigo normal y **25 %** por jefe intermedio; los invocados y el jefe final no sueltan corazones.
+- Los portales colocan al jugador **en el centro** y cancelan cualquier dash o retroceso pendiente. Se mantienen los movimientos diagonales normalizados, también al disparar y deslizarse junto a paredes.
+- La vida se muestra con corazones, sin el contador numérico duplicado. Se retira la instrucción de buscar el tesoro como objetivo principal.
+- Mantén **Tab** para ver el tiempo de la partida, incluso en pausa. Conserva el tiempo entre niveles, se detiene en pausa/derrota/victoria y se reinicia al empezar una nueva partida.
+- El castillo tiene seis diseños de suelo y decoración: pasillo con alfombra cruzada, galería circular, biblioteca, alfombras gemelas, sala de banquetes y mosaico ceremonial. Los obstáculos dibujados coinciden con sus colisiones.
+
+### Música y efectos
+
+Nueve pistas instrumentales originales: exploración de cripta y castillo, tres encuentros de jefe en la cripta y cuatro en el castillo, incluido el Regent. La música se repite sin reiniciarse al cambiar entre salas normales; cambia al entrar en combate con un jefe y vuelve al tema de exploración al derrotarlo. Se pausa con el juego. Nueve efectos breves cubren vara, arco, magia enemiga, impactos, golpes, daño, derrotas y carga. La muerte del jugador tiene un efecto discreto de 0,6 segundos.
+
+No se utilizaron grabaciones, melodías ni samples de terceros. Los archivos generados se ofrecen bajo CC0 1.0; la licencia y procedencia están en `Assets/Audio/LICENSE.md`. El generador reproducible es `Tools/generate_audio.py` en la raíz del repositorio (necesita Python, NumPy y FFmpeg; no son necesarios para jugar).
+
+[Demostración con audio](Documentation/gameplay_with_audio.mp4) · [Licencia del audio](Assets/Audio/LICENSE.md)
+
+
 ## Abrir y jugar
 
 1. Extrae el ZIP actualizado en una carpeta vacía.
@@ -140,6 +162,8 @@ godot --headless --fixed-fps 60 --path . --script res://Tests/MeleeContactSmoke.
 godot --headless --fixed-fps 60 --path . --script res://Tests/FinalBossSmoke.gd
 godot --headless --fixed-fps 60 --path . --script res://Tests/AnimationSmoke.gd
 godot --headless --fixed-fps 60 --path . --script res://Tests/MageCastingSmoke.gd
+godot --headless --fixed-fps 60 --path . --script res://Tests/ExpansionSmoke.gd
+godot --headless --fixed-fps 60 --path . --script res://Tests/EnemyPatternsSmoke.gd
 ```
 
 Las pruebas comprueban 1.200 mapas con una tienda y un tesoro por nivel, puertas físicas en las cuatro direcciones, recorrido de los seis niveles, un objeto distinto por nivel, transición de entorno en el cuarto, conservación de mejoras, portales garantizados, victoria y reinicio. Las pruebas de menú envían teclas reales y arrancan procesos nuevos de Godot para comprobar la persistencia. Las pruebas de combate comprueban separación física, paredes, invulnerabilidad y los tres ataques del jefe final, incluyendo contacto real durante su embestida. Las nuevas pruebas cubren la espera de 1,5 s en los seis tipos de enemigo con proyectiles, la pausa del temporizador, dificultad creciente y rutas físicas en las seis variantes de sala. Comprueban monedas recogidas una sola vez, compras con E, saldo insuficiente, rechazo de curación con vida completa, stock agotado, revisitas, pausa y transición de nivel. Una muestra de 90 niveles y 2.151 enemigos valida la proporción de monedas.

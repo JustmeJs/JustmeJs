@@ -48,4 +48,5 @@ func run() -> void:
  print("LOOT SAMPLE: ", inspected_kills, " inspected enemies; ", observed_drops, " drops; ratio ", ratio)
  print("NORMAL-ROOM INCOME PER FLOOR (30 seeds each): ", budgets)
  print("LOOT BALANCE CHECKS: ", passed, " passed; ", failed, " failed")
+ await preload("res://Tests/AudioTestCleanup.gd").drain(self)
  quit(1 if failed else 0)

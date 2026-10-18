@@ -227,4 +227,5 @@ func run() -> void:
  await frames(10)
  verify(is_equal_approx(button.scale.x, 1), "Menu button returns to normal scale")
  print("ANIMATION CHECKS: ", passed, " passed; ", failed, " failed")
+ await preload("res://Tests/AudioTestCleanup.gd").drain(self)
  quit(1 if failed > 0 else 0)

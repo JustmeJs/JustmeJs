@@ -57,7 +57,8 @@ namespace KleinesSpiel.Scripts.Enemies
 
 			if (projectileInstance is Projectiles.Projectile projectile)
 			{
-				projectile.Launch(direction, ProjectileSpeed * ProjectileSpeedMultiplier, ProjectileDamage);
+				projectile.IsArrow = true;
+                projectile.Launch(direction, ProjectileSpeed * ProjectileSpeedMultiplier, ProjectileDamage);
 			}
 		}
 	}

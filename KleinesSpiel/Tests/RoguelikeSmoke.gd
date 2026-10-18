@@ -305,6 +305,7 @@ func run() -> void:
  await clear_room()
  verify(not paused and not manager.GetRunFinished() and manager.GetPortalAvailable(), "Guaranteed portal also works after retry")
  print("ROGUELIKE CHECKS: ", passed, " passed; ", failed, " failed")
+ await preload("res://Tests/AudioTestCleanup.gd").drain(self)
  quit(1 if failed > 0 else 0)
 
 func player_stats() -> Array:

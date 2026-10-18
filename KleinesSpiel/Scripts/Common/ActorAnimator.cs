@@ -6,6 +6,8 @@ namespace KleinesSpiel.Scripts.Common
     public partial class ActorAnimator : Node2D
     {
         [Export] public bool Floating;
+        public bool ProceduralPose;
+        private float _deathTime;
         [Export] public Color Accent = new Color(0.3f, 0.85f, 1f);
         private AnimatedSprite2D _sprite;
         private Vector2 _spriteScale;
@@ -110,6 +112,21 @@ namespace KleinesSpiel.Scripts.Common
             _sprite.Scale = _spriteScale * new Vector2(1 + stretch, 1 - stretch);
             _sprite.SelfModulate = state == "hurt" ? new Color(2, 1.3f, 1.3f)
                 : state == "dash" ? new Color(0.55f, 1.3f, 1.6f) : Colors.White;
+            if (ProceduralPose)
+            {
+                if (_dead)
+                {
+                    _deathTime += dt;
+                    _sprite.Rotation = _deathTime * 2;
+                    _sprite.Scale *= Mathf.Max(0.1f, 1 - _deathTime);
+                    _sprite.Modulate = new Color(1, 1, 1, Mathf.Max(0, 1 - _deathTime * 2));
+                }
+                else if (state == "attack")
+                {
+                    _sprite.Position += _facing.Normalized() * Mathf.Sin(_attack / 0.24f * Mathf.Pi) * 5;
+                    _sprite.Rotation = _facing.X * 0.12f;
+                }
+            }
             if (state == "dash")
             {
                 _trail -= dt;

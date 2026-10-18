@@ -74,4 +74,5 @@ func run() -> void:
   Input.action_release("move_" + name)
   await frames(2)
  print("MAGE CASTING CHECKS: ", passed, " passed; ", failed, " failed")
+ await preload("res://Tests/AudioTestCleanup.gd").drain(self)
  quit(1 if failed > 0 else 0)

@@ -8,6 +8,7 @@ namespace KleinesSpiel.Scripts.Rooms
     {
         [Export] public Color StoneTint = Colors.White;
         [Export] public bool Castle;
+        public int Design;
         [Export] public RoomMapType RoomKind;
         private Texture2D _wall;
         private float _time;
@@ -43,6 +44,12 @@ namespace KleinesSpiel.Scripts.Rooms
                     DrawTextureRect(_wall, rect, true, StoneTint);
                     if (group == "Obstacles")
                     {
+                        if (Castle && Design is 2 or 4)
+                        {
+                            DrawRect(rect.Grow(-3), new Color(0.25f, 0.13f, 0.07f));
+                            for (float y = rect.Position.Y + 9; y < rect.End.Y - 4; y += 12)
+                                DrawLine(new Vector2(rect.Position.X+5,y), new Vector2(rect.End.X-5,y), new Color(0.65f, 0.43f, 0.22f), 3);
+                        }
                         DrawRect(rect, new Color(0.04f, 0.04f, 0.09f), false, 3);
                         DrawLine(rect.Position + Vector2.One * 3, rect.Position + new Vector2(rect.Size.X - 3, 3), StoneTint * 0.65f, 2);
                     }
@@ -90,8 +97,49 @@ namespace KleinesSpiel.Scripts.Rooms
                 DrawRect(new Rect2(at + Vector2.One, new Vector2(46, 46)), tile);
                 DrawLine(at + new Vector2(5, 35), at + new Vector2(32, 12), new Color(0.55f, 0.52f, 0.43f, 0.1f));
             }
-            Color cloth = new Color(0.31f, 0.075f, 0.13f);
+            Color cloth = Design % 2 == 0 ? new Color(0.31f, 0.075f, 0.13f) : new Color(0.08f, 0.17f, 0.27f);
             Color trim = new Color(0.65f, 0.48f, 0.2f, 0.8f);
+            if (Design == 1)
+            {
+                foreach (var at in new[] { new Vector2(416,192), new Vector2(608,192), new Vector2(416,384), new Vector2(608,384) })
+                    DrawArc(at, 52, 0, Mathf.Tau, 32, trim, 3);
+                DrawRect(new Rect2(484, 64, 56, 448), cloth);
+                return;
+            }
+            if (Design == 2)
+            {
+                for (int y = 105; y < 500; y += 75)
+                    DrawColoredPolygon(new[] { new Vector2(512,y-20), new Vector2(542,y), new Vector2(512,y+20), new Vector2(482,y) }, trim);
+                return;
+            }
+            if (Design == 3)
+            {
+                DrawRect(new Rect2(315, 100, 150, 375), cloth);
+                DrawRect(new Rect2(559, 100, 150, 375), cloth);
+                DrawRect(new Rect2(321, 106, 138, 363), trim, false, 2);
+                DrawRect(new Rect2(565, 106, 138, 363), trim, false, 2);
+                return;
+            }
+            if (Design == 4)
+            {
+                for (int y = 120; y < 480; y += 120)
+                {
+                    DrawRect(new Rect2(305, y, 414, 46), cloth);
+                    DrawLine(new Vector2(310,y+5), new Vector2(714,y+5), trim, 2);
+                }
+                return;
+            }
+            if (Design == 5)
+            {
+                DrawArc(new Vector2(512,288), 160, 0, Mathf.Tau, 64, trim, 4);
+                DrawArc(new Vector2(512,288), 148, 0, Mathf.Tau, 64, cloth, 12);
+                for (int i = 0; i < 8; i++)
+                {
+                    var at = new Vector2(512,288) + Vector2.Right.Rotated(i * Mathf.Tau / 8) * 115;
+                    DrawRect(new Rect2(at - Vector2.One * 6, Vector2.One * 12), trim);
+                }
+                return;
+            }
             DrawRect(new Rect2(482, 64, 60, 448), cloth);
             DrawRect(new Rect2(288, 258, 448, 60), cloth);
             DrawRect(new Rect2(486, 68, 52, 440), trim, false, 2);

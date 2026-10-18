@@ -20,8 +20,11 @@ El acceso a estas páginas fue bloqueado por la red del entorno con HTTP 403, ta
 | Enemigo normal | 35 % de probabilidad de soltar 1 moneda. |
 | Jefe de los niveles 1–5 | 3 monedas garantizadas en una pila. |
 | Jefe final | Termina la partida; no ofrece moneda que ya no se pueda gastar. |
+| Corazón por enemigo normal | 5 % (antes 12 %). |
+| Corazón por jefe intermedio | 25 % (antes garantizado). |
+| Zombis invocados | Sin monedas ni corazones; no permiten farmear recursos. |
 | Monedero | Empieza en 0, conserva saldo entre niveles, máximo 99. |
-| Tiendas | Una por nivel; dos corazones y un pasivo. |
+| Tiendas | Una por nivel, marcada desde el inicio; dos corazones y un pasivo. |
 | Corazón completo | 3 monedas; cura hasta 2 medios corazones, sin aumentar la vida máxima. |
 | Pasivo | 15 monedas; su mejora se acumula. La tienda excluye el pasivo de penetración. |
 | Reposición | Ninguna dentro del mismo nivel. El siguiente nivel tiene stock nuevo. |

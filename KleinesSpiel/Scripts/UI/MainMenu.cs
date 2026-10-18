@@ -7,7 +7,8 @@ namespace KleinesSpiel.Scripts.UI
 	{
 		public override void _Ready()
 		{
-			MenuMotion.Configure(this);
+			Audio.GameAudio.Instance?.OnRunEnded();
+            MenuMotion.Configure(this);
 			var playButton = GetNode<Button>("CenterContainer/VBoxContainer/PlayButton");
 			playButton.Pressed += OnPlayPressed;
 			GetNode<Button>("CenterContainer/VBoxContainer/LanguageButton").Pressed += OnLanguagePressed;

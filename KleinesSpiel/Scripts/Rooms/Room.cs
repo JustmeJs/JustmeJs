@@ -63,15 +63,15 @@ namespace KleinesSpiel.Scripts.Rooms
                 AddRectangle(obstacles, rectangle.GetCenter(), rectangle.Size);
             AddChild(new RoomArt { Name = "RoomArt", ZIndex = -10,
                 StoneTint = Floor.IsCastle ? new Color(1.35f, 1.2f, 0.95f) : Colors.White,
-                Castle = Floor.IsCastle, RoomKind = Definition.Kind });
+                Castle = Floor.IsCastle, RoomKind = Definition.Kind, Design = Definition.Layout });
             if (Definition.Kind == RoomMapType.Start)
             {
                 AddChild(new Label
                 {
-                    Name = "TutorialLabel", Position = new Vector2(305, 225), Size = new Vector2(414, 110),
+                    Name = "TutorialLabel", Position = new Vector2(305, 120), Size = new Vector2(414, 110),
                     Text = Floor.Name + "\n" + Common.Localization.Text(
-                        "WASD: Move   Arrows: Cast\nSpace: Dash   Esc: Pause\nFind the one treasure on this floor.",
-                        "WASD: Bewegen   Pfeile: Zaubern\nLeertaste: Dash   Esc: Pause\nFinde den einzigen Schatz dieser Ebene."),
+                        "WASD: Move   Arrows: Cast\nSpace: Dash   Esc: Pause\nTab: Run time   Green coin: Shop",
+                        "WASD: Bewegen   Pfeile: Zaubern\nLeertaste: Dash   Esc: Pause\nTab: Spielzeit   Grüne Münze: Laden"),
                     HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
                     AutowrapMode = TextServer.AutowrapMode.WordSmart, MouseFilter = Control.MouseFilterEnum.Ignore
                 });
@@ -153,25 +153,52 @@ namespace KleinesSpiel.Scripts.Rooms
                 var safe = points.Where(p => !RoomLayouts.Obstacles(Definition.Layout).Any(r => r.Grow(22).HasPoint(p))
                     && (player == null || player.Position.DistanceTo(p) > 90)).ToList();
                 DungeonFloor.Shuffle(safe, random);
-                string[] types = { "res://Scenes/Enemies/EnemyMelee.tscn", "res://Scenes/Enemies/EnemyRanged.tscn", "res://Scenes/Enemies/EnemyFourWay.tscn" };
+                string[] types = { "res://Scenes/Enemies/EnemyMelee.tscn", "res://Scenes/Enemies/EnemyRanged.tscn", "res://Scenes/Enemies/EnemyFourWay.tscn", "res://Scenes/Enemies/EnemySummoner.tscn" };
                 int count = Math.Min(safe.Count, random.Next(2, Floor.Zone <= 2 ? 4 : Floor.Zone <= 4 ? 5 : 6));
                 for (int i = 0; i < count; i++)
                 {
-                    var enemy = GD.Load<PackedScene>(types[random.Next(types.Length)]).Instantiate<Enemies.Enemy>();
+                    int type = random.Next(types.Length);
+                    if (type == 3 && _enemies.GetChildren().OfType<Enemies.EnemySummoner>().Any()) type = 0;
+                    var enemy = GD.Load<PackedScene>(types[type]).Instantiate<Enemies.Enemy>();
                     AddEnemy(enemy, safe[i]);
                 }
             }
         }
 
-        private void AddEnemy(Enemies.Enemy enemy, Vector2 position)
+        private void AddEnemy(Enemies.Enemy enemy, Vector2 position, bool summoned = false)
         {
             bool boss = Definition.Kind == RoomMapType.Boss;
             enemy.ConfigureForFloor(Floor.Zone, boss);
             enemy.CoinDropValue = boss ? (Floor.IsFinal ? 0 : Items.Economy.BossCoins) : Items.Economy.EnemyDrop(_lootRandom);
+            if (summoned) { enemy.CoinDropValue = 0; enemy.HeartDropChance = 0; enemy.AddToGroup("summoned_zombies"); }
+            Enemies.EnemyAppearance.Apply(enemy, Floor.IsCastle, boss, summoned);
+            if (enemy is Enemies.EnemyFourWay fourWay) fourWay.BossPatterns = boss;
+            if (enemy is Enemies.Boss mixedBoss) mixedBoss.CastlePatterns = Floor.IsCastle;
             enemy.Position = position;
             enemy.Defeated += OnDefeated;
             _alive++;
             _enemies.AddChild(enemy);
+        }
+
+        public bool TrySummonZombie(Enemies.EnemySummoner summoner)
+        {
+            if (Definition.Cleared || GetTree().Paused || summoner.GetCurrentHealth() <= 0
+                || _enemies.GetChildren().OfType<Enemies.Enemy>().Count(e => e.IsInGroup("summoned_zombies") && e.GetCurrentHealth() > 0) >= 4) return false;
+            var player = GetTree().GetFirstNodeInGroup("player") as Node2D;
+            for (int i = 0; i < 16; i++)
+            {
+                var at = summoner.Position + Vector2.Right.Rotated(i * Mathf.Tau / 16) * 64;
+                if (!new Rect2(310, 86, 404, 404).HasPoint(at)
+                    || RoomLayouts.Obstacles(Definition.Layout).Any(r => r.Grow(18).HasPoint(at))
+                    || (player != null && at.DistanceTo(ToLocal(player.GlobalPosition)) < 60)
+                    || _enemies.GetChildren().OfType<Enemies.Enemy>().Any(e => e.GetCurrentHealth() > 0 && e.Position.DistanceTo(at) < 30)) continue;
+                var zombie = GD.Load<PackedScene>("res://Scenes/Enemies/EnemyMelee.tscn").Instantiate<Enemies.EnemyMelee>();
+                zombie.MaxHealth = 2; zombie.MoveSpeed = 125;
+                AddEnemy(zombie, at, true);
+                Effects.BurstEffect.Spawn(this, ToGlobal(at), new Color(0.4f, 1, 0.45f), 25, 0.3f);
+                return true;
+            }
+            return false;
         }
 
         private void OnDefeated(Enemies.Enemy enemy)

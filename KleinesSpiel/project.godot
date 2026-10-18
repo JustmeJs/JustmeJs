@@ -13,6 +13,8 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+GameAudio="*res://Scripts/Audio/GameAudio.cs"
+
 DungeonManager="*res://Scripts/Rooms/DungeonManager.cs"
 
 [dotnet]

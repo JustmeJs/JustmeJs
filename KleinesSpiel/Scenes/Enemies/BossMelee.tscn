@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://boss_melee_scene"]
 
-[ext_resource type="Script" path="res://Scripts/Enemies/EnemyMelee.cs" id="1"]
+[ext_resource type="Script" path="res://Scripts/Enemies/ChargingMeleeBoss.cs" id="1"]
 
 [ext_resource type="SpriteFrames" path="res://Resources/Animations/ogre_boss_frames.tres" id="art"]
 [ext_resource type="Script" path="res://Scripts/Common/ActorAnimator.cs" id="animator"]
@@ -15,7 +15,7 @@ script = ExtResource("1")
 MaxHealth = 70.0
 MoveSpeed = 90.0
 ContactDamageHalfHearts = 2
-HeartDropChance = 1.0
+HeartDropChance = 0.25
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_1")

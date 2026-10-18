@@ -6,7 +6,12 @@ namespace KleinesSpiel.Scripts.Enemies
 	// in alle 4 Richtungen gleichzeitig (oben, unten, links, rechts).
 	public partial class EnemyFourWay : Enemy
 	{
-		[ExportGroup("Vierfach-Schuss")]
+		public bool BossPatterns;
+        private int _patternVolley;
+        private string _lastPattern = "Cross";
+        public string GetLastPattern() => _lastPattern;
+
+        [ExportGroup("Vierfach-Schuss")]
 		[Export] public PackedScene ProjectileScene;
 		[Export] public float FireCooldownSeconds = 1.8f;
 		[Export] public float ProjectileSpeed = 200f;
@@ -53,13 +58,8 @@ namespace KleinesSpiel.Scripts.Enemies
 
 			AnimateAttack(GetDirectionToPlayer());
 
-			Vector2[] directions =
-			{
-				new Vector2(0, -1),
-				new Vector2(0, 1),
-				new Vector2(-1, 0),
-				new Vector2(1, 0)
-			};
+            _lastPattern = BossPatterns ? WardenPatterns.Name(_patternVolley) : "Cross";
+            var directions = WardenPatterns.Directions(BossPatterns ? _patternVolley++ : 0, GetDirectionToPlayer());
 
 			foreach (var direction in directions)
 			{

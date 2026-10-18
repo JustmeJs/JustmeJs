@@ -56,7 +56,7 @@ namespace KleinesSpiel.Scripts.Items
             for (int i = 0; i < 3; i++)
             {
                 float angle = _time * 1.5f + i * Mathf.Tau / 3;
-                Vector2 at = new Vector2(Mathf.Cos(angle) * 19, Mathf.Sin(angle) * 12);
+                Vector2 at = new Vector2(Mathf.Cos(angle) * (IsHeart ? 12 : 19), Mathf.Sin(angle) * (IsHeart ? 8 : 12));
                 float brightness = 0.5f + 0.5f * Mathf.Sin(_time * 5 + i);
                 DrawLine(at - Vector2.Right * 2, at + Vector2.Right * 2, color * brightness);
                 DrawLine(at - Vector2.Down * 2, at + Vector2.Down * 2, color * brightness);

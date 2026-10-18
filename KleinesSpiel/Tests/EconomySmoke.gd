@@ -148,4 +148,5 @@ func run() -> void:
  player = get_first_node_in_group("player")
  verify(player.GetCoins() == 0, "Retry resets the economy")
  print("ECONOMY CHECKS: ", passed, " passed; ", failed, " failed")
+ await preload("res://Tests/AudioTestCleanup.gd").drain(self)
  quit(1 if failed else 0)

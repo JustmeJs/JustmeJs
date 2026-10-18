@@ -51,6 +51,7 @@ func run() -> void:
  await await_stage(boss, "Fan", "Telegraph")
  verify(boss.GetTotalShots() == 0, "First fan is telegraphed before any damage")
  var warning_time: float = boss.GetAttackTimeRemaining()
+ verify(warning_time <= .401, "Fan has a shorter warning")
  var frozen_pos: Vector2 = boss.position
  paused = true
  await frames(30)
@@ -70,6 +71,7 @@ func run() -> void:
  await clear_shots()
 
  await await_stage(boss, "Ring", "Telegraph")
+ verify(boss.GetAttackTimeRemaining() <= .181, "Ring has only a brief cast animation")
  var safe_direction: Vector2 = boss.GetLockedAim()
  var before_ring: int = boss.GetTotalShots()
  await await_stage(boss, "Ring", "Attacking")
@@ -84,21 +86,23 @@ func run() -> void:
   if safe_direction.dot(direction) < 0:
    rear_shots += 1
  verify(ring_count >= 13 and ring_count <= 16, "Ring fires in multiple directions around the boss")
- verify(safe_gap_clear and rear_shots >= 8, "Radial attack preserves its advertised dodge opening")
+ verify(safe_gap_clear and rear_shots >= 8, "Radial attack preserves its dodge opening")
  await await_stage(boss, "Ring", "Recovery")
  verify(boss.GetTotalShots() - before_ring == ring_count, "First-phase ring fires one finite wave")
  await clear_shots()
 
  await await_stage(boss, "Charge", "Telegraph")
+ verify(boss.GetAttackTimeRemaining() <= .451, "Charge has a shorter warning")
  var charge_direction: Vector2 = boss.GetLockedAim()
  var origin: Vector2 = boss.position
  target.position = boss.position - charge_direction * 150
  await await_stage(boss, "Charge", "Attacking")
  await frames(12)
+ verify(boss.get_node("CollisionShape2D").scale.x > 1.3, "Charge has a larger physical impact area")
  var moved: Vector2 = boss.position - origin
  verify(moved.length() > 40 and moved.normalized().dot(charge_direction) > 0.99, "Charge follows the locked warning direction after target dodges")
  await await_stage(boss, "Charge", "Recovery")
- verify(boss.position.distance_to(origin) < 195, "Charge ends within the arena")
+ verify(absf(boss.position.x - 512) <= 181 and absf(boss.position.y - 288) <= 181, "Longer charge ends inside rectangular arena bounds")
  var counts: Dictionary = boss.GetAttackCounts()
  verify(counts["Fan"] == 1 and counts["Ring"] == 1 and counts["Charge"] == 1, "All three different attacks execute in the first cycle")
 
@@ -162,4 +166,5 @@ func run() -> void:
  boss.TakeDamage(1000)
  await frames(40)
  print("FINAL BOSS CHECKS: ", passed, " passed; ", failed, " failed")
+ await preload("res://Tests/AudioTestCleanup.gd").drain(self)
  quit(1 if failed else 0)

@@ -5,7 +5,7 @@ namespace KleinesSpiel.Scripts.UI
 {
 	public partial class HUD : CanvasLayer
 	{
-		private Label _healthLabel;
+		private Label _runTimeLabel;
         private Label _coinsLabel;
         private Label _zoneLabel;
 		private Label _multiplierLabel;
@@ -18,7 +18,8 @@ namespace KleinesSpiel.Scripts.UI
 
 		public override void _Ready()
 		{
-			_healthLabel = GetNodeOrNull<Label>("HealthLabel");
+			_runTimeLabel = new RunClockLabel { Name = "RunTimeLabel", Position = new Vector2(16, 400), Visible = false };
+            AddChild(_runTimeLabel);
 			_multiplierLabel = GetNodeOrNull<Label>("MultiplierLabel");
 			_itemPopupLabel = GetNodeOrNull<Label>("ItemPopupLabel");
 			_bossHealthBar = GetNodeOrNull<ProgressBar>("BossHealthBar");
@@ -41,12 +42,6 @@ namespace KleinesSpiel.Scripts.UI
 					return;
 			}
 
-			if (_healthLabel != null)
-			{
-				int current = _player.GetCurrentHealthHalfHearts();
-				int max = _player.GetMaxHealthHalfHearts();
-				_healthLabel.Text = Localization.Format("Health: {0}/{1}", "Leben: {0}/{1}", current, max);
-			}
 
 			if (_multiplierLabel != null)
 			{

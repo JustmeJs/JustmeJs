@@ -76,6 +76,11 @@ namespace KleinesSpiel.Scripts.UI
 				var rect = new Rect2(cellOrigin, new Vector2(CellSize, CellSize));
 
 				DrawRect(rect, GetColorFor(info));
+                if (info.Type == Rooms.RoomMapType.Shop)
+                {
+                    DrawCircle(rect.GetCenter(), 5, new Color(1, 0.83f, 0.2f));
+                    DrawLine(rect.GetCenter() - Vector2.Down * 3, rect.GetCenter() + Vector2.Down * 3, new Color(0.35f, 0.25f, 0.05f), 2);
+                }
 
 				if (kvp.Key == currentPath)
 				{
@@ -86,7 +91,8 @@ namespace KleinesSpiel.Scripts.UI
 
 		private static Color GetColorFor(Rooms.MinimapRoomInfo info)
 		{
-			if (!info.Visited)
+			if (info.Type == Rooms.RoomMapType.Shop) return new Color(0.25f, 0.85f, 0.6f);
+            if (!info.Visited)
 				return new Color(0.35f, 0.35f, 0.38f, 0.9f);
 
 			return info.Type switch

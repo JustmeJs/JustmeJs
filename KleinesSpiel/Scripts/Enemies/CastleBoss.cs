@@ -77,18 +77,20 @@ namespace KleinesSpiel.Scripts.Enemies
             _stage = Stage.Telegraph;
             _lockedAim = GetDirectionToPlayer();
             if (_lockedAim == Vector2.Zero) _lockedAim = Vector2.Down;
-            _timer = _pattern == Pattern.Charge ? 0.9f : 0.7f;
-            if (_combatPhase == 2) _timer -= 0.1f;
+            _timer = _pattern == Pattern.Ring ? 0.18f : _pattern == Pattern.Charge ? 0.45f : 0.4f;
+            if (_combatPhase == 2 && _pattern != Pattern.Ring) _timer -= 0.07f;
+            if (_pattern == Pattern.Ring) GetNode<Common.ActorAnimator>("Visual").PlayAttack(_lockedAim);
             Velocity = Vector2.Zero;
         }
 
         private void BeginAttack()
         {
             _stage = Stage.Attacking;
+            if (_pattern == Pattern.Charge) { SetChargeSize(true); Audio.GameAudio.Instance?.PlayEffect("charge"); }
             _attackCounts[(int)_pattern]++;
             _volley = 0;
             _shotTimer = 0f;
-            _timer = _pattern == Pattern.Charge ? 0.55f : 1.2f;
+            _timer = _pattern == Pattern.Charge ? 0.8f : 1.2f;
             AnimateAttack(_lockedAim);
         }
 
@@ -99,7 +101,7 @@ namespace KleinesSpiel.Scripts.Enemies
             {
                 // Fixed arena bounds keep a missed charge away from doorways even
                 // when this enemy is tested or previewed without physical walls.
-                float speed = _combatPhase == 2 ? 360f : 310f;
+                float speed = _combatPhase == 2 ? 420f : 370f;
                 Vector2 next = GlobalPosition + _lockedAim * speed * dt;
                 Vector2 relative = next - _arenaCenter;
                 bool touchesWall = Mathf.Abs(relative.X) > 180f || Mathf.Abs(relative.Y) > 180f;
@@ -131,7 +133,7 @@ namespace KleinesSpiel.Scripts.Enemies
         private void FireFan()
         {
             int count = _combatPhase == 2 ? 7 : 5;
-            float spread = Mathf.DegToRad(_combatPhase == 2 ? 70f : 56f);
+            float spread = Mathf.DegToRad(_combatPhase == 2 ? 90f : 72f);
             for (int i = 0; i < count; i++)
             {
                 float angle = Mathf.Lerp(-spread * 0.5f, spread * 0.5f, i / (float)(count - 1));
@@ -142,7 +144,7 @@ namespace KleinesSpiel.Scripts.Enemies
         private void FireRing()
         {
             int count = _combatPhase == 2 ? 24 : 18;
-            // The green wedge shown during the windup stays clear for every ring.
+            // A safe opening remains, but the ring has no arena telegraph.
             // Its 72-degree opening is generous enough to reach from either side.
             for (int i = 0; i < count; i++)
             {
@@ -168,9 +170,17 @@ namespace KleinesSpiel.Scripts.Enemies
             _totalShots++;
         }
 
+        private void SetChargeSize(bool charging)
+        {
+            var shape = GetNode<CollisionShape2D>("CollisionShape2D");
+            shape.Scale = Vector2.One * (charging ? 1.35f : 1f);
+            GetNode<Node2D>("Visual").Scale = Vector2.One * (charging ? 1.2f : 1f);
+        }
+
         private void BeginRecovery()
         {
             _stage = Stage.Recovery;
+            SetChargeSize(false);
             _timer = _combatPhase == 2 ? 0.75f : 1.05f;
             Velocity = Vector2.Zero;
         }
@@ -206,7 +216,7 @@ namespace KleinesSpiel.Scripts.Enemies
                 DrawCircle(orbit, _combatPhase == 2 ? 3f : 2f, gold);
             }
 
-            // A crown above the animated head gives this reused creature a new silhouette.
+            // A crown distinguishes the Regent from the other armored wardens.
             Vector2[] crown = { new(-19, -35), new(-22, -50), new(-10, -43), new(0, -57),
                 new(10, -43), new(22, -50), new(19, -35) };
             DrawColoredPolygon(crown, gold);
@@ -214,13 +224,13 @@ namespace KleinesSpiel.Scripts.Enemies
                 crown[6], crown[0] }, new Color(0.35f, 0.2f, 0.08f), 2f, true);
             DrawCircle(new Vector2(0, -43), 4, new Color(0.7f, 0.22f, 0.9f));
 
-            if (_stage != Stage.Telegraph) return;
+            if (_stage != Stage.Telegraph || _pattern == Pattern.Ring) return;
             float pulse = 0.45f + (Mathf.Sin(_visualTime * 18f) + 1f) * 0.15f;
             Color warning = new Color(1f, 0.6f, 0.2f, pulse);
             if (_pattern == Pattern.Charge)
             {
-                Vector2 side = _lockedAim.Orthogonal() * 22f;
-                Vector2 end = _lockedAim * 190f;
+                Vector2 side = _lockedAim.Orthogonal() * 40f;
+                Vector2 end = _lockedAim * 285f;
                 DrawColoredPolygon(new[] { side, end + side, end - side, -side },
                     new Color(1f, 0.3f, 0.3f, 0.2f));
                 DrawLine(Vector2.Zero, end, warning, 4f, true);
@@ -229,21 +239,13 @@ namespace KleinesSpiel.Scripts.Enemies
             }
             else if (_pattern == Pattern.Fan)
             {
-                float angle = Mathf.DegToRad(_combatPhase == 2 ? 35f : 28f);
+                float angle = Mathf.DegToRad(_combatPhase == 2 ? 45f : 36f);
                 DrawLine(Vector2.Zero, _lockedAim.Rotated(-angle) * 125f, warning, 2f, true);
                 DrawLine(Vector2.Zero, _lockedAim.Rotated(angle) * 125f, warning, 2f, true);
                 DrawArc(Vector2.Zero, 125f, _lockedAim.Angle() - angle,
                     _lockedAim.Angle() + angle, 24, warning, 2f, true);
             }
-            else
-            {
-                float gap = Mathf.DegToRad(36f);
-                float start = _lockedAim.Angle() + gap;
-                DrawArc(Vector2.Zero, 85f, start, start + Mathf.Tau - gap * 2, 48, warning, 3f, true);
-                Color safe = new Color(0.3f, 1f, 0.75f, pulse);
-                DrawLine(Vector2.Zero, _lockedAim.Rotated(-gap) * 120f, safe, 2f, true);
-                DrawLine(Vector2.Zero, _lockedAim.Rotated(gap) * 120f, safe, 2f, true);
-            }
+
         }
 
         // Read-only diagnostics let regression tests observe the real combat loop.

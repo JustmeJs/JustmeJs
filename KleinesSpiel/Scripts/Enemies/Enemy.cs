@@ -25,8 +25,8 @@ namespace KleinesSpiel.Scripts.Enemies
 		[ExportGroup("Herz-Drop")]
 		// Wahrscheinlichkeit (0-1), dass beim Tod dieses Gegners ein
 		// Herz zum Aufsammeln liegen bleibt. Bosse setzen das im
-		// Editor typischerweise auf 1.0 (garantierter Drop).
-		[Export(PropertyHint.Range, "0,1,0.01")] public float HeartDropChance = 0.12f;
+		// Editor auf 0.25; normale Gegner verwenden 0.05.
+		[Export(PropertyHint.Range, "0,1,0.01")] public float HeartDropChance = 0.05f;
 
 		// Wird ausgeloest, wenn dieser Gegner stirbt. Das Room-Skript
 		// hoert auf dieses Event, um zu wissen, wann der Raum leer ist.
@@ -53,7 +53,8 @@ namespace KleinesSpiel.Scripts.Enemies
 
 		public override void _Ready()
 		{
-			CurrentHealth = MaxHealth;
+			MotionMode = MotionModeEnum.Floating;
+            CurrentHealth = MaxHealth;
 			_visual = GetNodeOrNull<Node2D>("Visual");
 			_animator = _visual as Common.ActorAnimator;
 			AddToGroup("enemies");
@@ -121,7 +122,7 @@ namespace KleinesSpiel.Scripts.Enemies
 
 		private void CheckContactDamage()
 		{
-			if (_contactDamageTimer > 0f || _contactRecoilTimer > 0f || _contactRecoveryTimer > 0f)
+			if (ContactDamageHalfHearts <= 0 || _contactDamageTimer > 0f || _contactRecoilTimer > 0f || _contactRecoveryTimer > 0f)
 				return;
 
 			for (int i = 0; i < GetSlideCollisionCount(); i++)
@@ -132,6 +133,7 @@ namespace KleinesSpiel.Scripts.Enemies
 					Vector2 directionToPlayer = (player.GlobalPosition - GlobalPosition).Normalized();
 					if (directionToPlayer.IsZeroApprox()) directionToPlayer = -collision.GetNormal();
 					AnimateAttack(directionToPlayer);
+                    Audio.GameAudio.Instance?.PlayEffect("melee");
 					_contactDamageTimer = ContactDamageCooldownSeconds;
 					BeginContactRecovery(-directionToPlayer);
 
@@ -201,6 +203,7 @@ namespace KleinesSpiel.Scripts.Enemies
 			CollisionMask = 0;
 			RemoveFromGroup("enemies");
 			_animator?.PlayDeath();
+            Audio.GameAudio.Instance?.PlayEffect("enemy_death");
 			TrySpawnHeartDrop();
 			Defeated?.Invoke(this);
 			// The actor is harmless immediately; only its death visual remains.

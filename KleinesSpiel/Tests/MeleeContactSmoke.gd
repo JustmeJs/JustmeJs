@@ -134,7 +134,8 @@ func run() -> void:
  verify(player.position.distance_to(Vector2(400, 300)) < 0.1, "Immune contact does not knock the player back")
  await frames(75)
  verify(player.GetCurrentHealthHalfHearts() == 7, "Repeated contact cannot bypass hurt immunity")
- verify(player.position.distance_to(Vector2(400, 300)) < 0.1, "Repeated immune contacts cannot lock the player in knockback")
+ # Floating bodies may separate by two 0.08px safe margins; this is not forced knockback.
+ verify(player.position.distance_to(Vector2(400, 300)) < 0.25, "Repeated immune contacts cannot lock the player in knockback")
  Input.action_press("move_down")
  await frames(12)
  Input.action_release("move_down")
@@ -156,4 +157,5 @@ func run() -> void:
  await clear_arena()
 
  print("MELEE CONTACT CHECKS: ", passed, " passed; ", failed, " failed")
+ await preload("res://Tests/AudioTestCleanup.gd").drain(self)
  quit(0 if failed == 0 else 1)

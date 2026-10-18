@@ -8,7 +8,8 @@ namespace KleinesSpiel.Scripts.Projectiles
 	public partial class Projectile : Area2D
 	{
 		[Export] public float LifetimeSeconds = 3f; // zerstoert sich nach dieser Zeit von selbst
-		[Export] public bool Piercing = false; // true = durchdringt einen Gegner (Item-Effekt)
+		[Export] public bool Piercing = false;
+        [Export] public bool IsArrow; // true = durchdringt einen Gegner (Item-Effekt)
 
 		private Vector2 _direction = Vector2.Zero;
 		private float _speed;
@@ -48,6 +49,8 @@ namespace KleinesSpiel.Scripts.Projectiles
 
 			// Projektil in Bewegungsrichtung drehen (nuetzlich fuer laengliche Sprites).
 			Rotation = _direction.Angle();
+            if (IsArrow && _sprite != null) _sprite.Visible = false;
+            Audio.GameAudio.Instance?.PlayEffect(CollisionLayer == 8 ? "cast" : IsArrow ? "arrow" : "enemy_cast");
 		}
 
 		public override void _PhysicsProcess(double delta)
@@ -78,7 +81,15 @@ namespace KleinesSpiel.Scripts.Projectiles
 
 		public override void _Draw()
 		{
-			for (int i = 1; i < _trail.Count; i++)
+			if (IsArrow)
+            {
+                DrawLine(new Vector2(-11, 0), new Vector2(8, 0), new Color(0.72f, 0.49f, 0.23f), 2);
+                DrawColoredPolygon(new[] { new Vector2(12, 0), new Vector2(5, -4), new Vector2(5, 4) }, new Color(0.88f, 0.92f, 0.95f));
+                DrawLine(new Vector2(-11, -3), new Vector2(-6, 0), new Color(0.82f, 0.82f, 0.65f), 2);
+                DrawLine(new Vector2(-11, 3), new Vector2(-6, 0), new Color(0.82f, 0.82f, 0.65f), 2);
+                return;
+            }
+            for (int i = 1; i < _trail.Count; i++)
 				DrawLine(ToLocal(_trail[i - 1]), ToLocal(_trail[i]),
 					new Color(TrailColor, (float)i / _trail.Count * 0.5f), 2);
 		}
@@ -87,6 +98,7 @@ namespace KleinesSpiel.Scripts.Projectiles
 		{
 			if (_spent) return;
 			_spent = true;
+            Audio.GameAudio.Instance?.PlayEffect("impact");
 			Effects.BurstEffect.Spawn(this, GlobalPosition, TrailColor, 12, 0.2f);
 			QueueFree();
 		}

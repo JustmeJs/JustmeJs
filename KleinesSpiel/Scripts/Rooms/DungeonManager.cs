@@ -20,6 +20,8 @@ namespace KleinesSpiel.Scripts.Rooms
         private bool _transitionQueued;
         private int _arrivalFrames;
         private bool _finished;
+        private double _runSeconds;
+        public double GetRunSeconds() => _runSeconds;
         private PackedScene _pauseMenuScene;
         private UI.PauseMenu _pauseMenu;
         public event Action MapChanged;
@@ -44,6 +46,7 @@ namespace KleinesSpiel.Scripts.Rooms
         public override void _PhysicsProcess(double delta)
         {
             if (!GetTree().Paused && _arrivalFrames > 0) _arrivalFrames--;
+            if (!GetTree().Paused && !_finished && IsInstanceValid(_player) && _player.IsInsideTree() && _player.GetCurrentHealthHalfHearts() > 0) _runSeconds += delta;
         }
 
         public override void _UnhandledInput(InputEvent @event)
@@ -76,6 +79,7 @@ namespace KleinesSpiel.Scripts.Rooms
             _items.Clear();
             foreach (int index in bag) _items.Enqueue(index);
             _finished = false;
+            _runSeconds = 0;
             _transitionQueued = false;
             BeginZone(1);
         }
@@ -88,9 +92,10 @@ namespace KleinesSpiel.Scripts.Rooms
             foreach (var room in _floor.Rooms.Values.Where(r => r.Kind == RoomMapType.Treasure))
                 room.ItemIndex = _items.Dequeue();
             _map.Clear();
-            EnterRoom(_floor.StartId, new Vector2(512, 480));
+            foreach (var shop in _floor.Rooms.Values.Where(r => r.Kind == RoomMapType.Shop)) Discover(shop.Id, false);
+            EnterRoom(_floor.StartId, new Vector2(512, 288));
             Hud()?.ShowItemPopup(Common.Localization.Format("Floor {0}/6: {1}", "Ebene {0}/6: {1}", zone, _floor.Name),
-                Common.Localization.Text("Find the treasure and defeat the boss.", "Finde den Schatz und besiege den Boss."), 3);
+                Common.Localization.Text("Defeat the boss to advance.", "Besiege den Boss, um weiterzukommen."), 3);
         }
 
         private void ReleaseRooms()
@@ -159,6 +164,7 @@ namespace KleinesSpiel.Scripts.Rooms
             _player.OnEnteredNewRoom();
             Hud()?.HideBossHealthBar();
             room.RefreshBossHud();
+            Audio.GameAudio.Instance?.EnterRoom(_floor, room);
             Discover(id, true);
             foreach (var neighbor in room.Definition.Neighbors.Values) Discover(neighbor, false);
             MapChanged?.Invoke();
@@ -179,6 +185,7 @@ namespace KleinesSpiel.Scripts.Rooms
         {
             if (room != _current) return;
             MapChanged?.Invoke();
+            Audio.GameAudio.Instance?.EnterRoom(_floor, room);
             if (room.Definition.Kind != RoomMapType.Boss || _floor.PortalOutcome.HasValue || _finished) return;
             _floor.PortalOutcome = !_floor.IsFinal;
             if (_floor.PortalOutcome == true)
@@ -210,6 +217,7 @@ namespace KleinesSpiel.Scripts.Rooms
         private void FinishRun()
         {
             _finished = true;
+            Audio.GameAudio.Instance?.OnRunEnded();
             GetTree().Paused = true;
             var screen = GD.Load<PackedScene>("res://Scenes/UI/VictoryScreen.tscn").Instantiate();
             GetTree().Root.AddChild(screen);

@@ -101,7 +101,8 @@ namespace KleinesSpiel.Scripts.Player
 
 		public override void _Ready()
 		{
-			_currentHealthHalfHearts = MaxHealthHalfHearts;
+			MotionMode = MotionModeEnum.Floating;
+            _currentHealthHalfHearts = MaxHealthHalfHearts;
 			_visual = GetNodeOrNull<Node2D>("Visual");
 			_animator = _visual as Common.ActorAnimator;
 			AddToGroup("player");
@@ -147,18 +148,7 @@ namespace KleinesSpiel.Scripts.Player
 
 		private void ProcessMovement(float dt)
 		{
-			Vector2 inputVector = Vector2.Zero;
-
-			if (Input.IsActionPressed("move_left"))
-				inputVector.X -= 1f;
-			if (Input.IsActionPressed("move_right"))
-				inputVector.X += 1f;
-			if (Input.IsActionPressed("move_up"))
-				inputVector.Y -= 1f;
-			if (Input.IsActionPressed("move_down"))
-				inputVector.Y += 1f;
-
-			inputVector = inputVector.Normalized();
+			Vector2 inputVector = Input.GetVector("move_left", "move_right", "move_up", "move_down");
 			Velocity = inputVector * MoveSpeed;
 		}
 
@@ -371,6 +361,7 @@ namespace KleinesSpiel.Scripts.Player
 			_currentHealthHalfHearts -= halfHeartsAmount;
 			_hurtInvincibilityTimer = HurtInvincibilitySeconds;
 			_animator?.PlayHurt();
+            Audio.GameAudio.Instance?.PlayEffect("hurt");
 
 			// Treffer zurueckgesetzt den Schaden-Multiplikator
 			ResetDamageMultiplier();
@@ -389,6 +380,8 @@ namespace KleinesSpiel.Scripts.Player
 			CollisionLayer = 0;
 			CollisionMask = 0;
 			_animator?.PlayDeath();
+            Audio.GameAudio.Instance?.OnRunEnded();
+            Audio.GameAudio.Instance?.PlayEffect("death");
 			GetTree().Paused = true;
 
 			var gameOverScene = GD.Load<PackedScene>("res://Scenes/UI/GameOverScreen.tscn");
@@ -424,6 +417,11 @@ namespace KleinesSpiel.Scripts.Player
 		public void OnEnteredNewRoom()
 		{
 			_dashUsedThisRoom = false;
+            _isDashing = false;
+            _dashTimer = 0;
+            _knockbackTimer = 0;
+            _knockbackVelocity = Vector2.Zero;
+            Velocity = Vector2.Zero;
 			ResetDamageMultiplier();
 		}
 

@@ -7,7 +7,7 @@
 [ext_resource type="Script" path="res://Scripts/Items/PickupMotion.cs" id="motion"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
-size = Vector2(28, 28)
+size = Vector2(16, 16)
 
 [node name="HeartPickup" type="Area2D"]
 collision_layer = 32
@@ -24,4 +24,4 @@ IsHeart = true
 
 [node name="Sprite" type="Sprite2D" parent="Visual"]
 texture = ExtResource("art")
-scale = Vector2(0.10207337, 0.10207337)
+scale = Vector2(0.055, 0.055)

@@ -9,7 +9,12 @@ namespace KleinesSpiel.Scripts.Enemies
 	// MoveSpeed sollte im Editor unter 150 px/s bleiben (nie schneller als der Spieler).
 	public partial class Boss : Enemy
 	{
-		[ExportGroup("Boss-Angriffe")]
+		public bool CastlePatterns;
+        private int _patternVolley;
+        private string _lastPattern = "Cross";
+        public string GetLastPattern() => _lastPattern;
+
+        [ExportGroup("Boss-Angriffe")]
 		[Export] public PackedScene ProjectileScene;
 		[Export] public float ChasePhaseSeconds = 2.5f;
 		[Export] public float ShootPhaseSeconds = 1.5f;
@@ -76,13 +81,8 @@ namespace KleinesSpiel.Scripts.Enemies
 
 			AnimateAttack(GetDirectionToPlayer());
 
-			Vector2[] directions =
-			{
-				new Vector2(0, -1),
-				new Vector2(0, 1),
-				new Vector2(-1, 0),
-				new Vector2(1, 0)
-			};
+            _lastPattern = CastlePatterns ? WardenPatterns.Name(_patternVolley) : "Cross";
+            var directions = WardenPatterns.Directions(CastlePatterns ? _patternVolley++ : 0, GetDirectionToPlayer());
 
 			foreach (var direction in directions)
 			{

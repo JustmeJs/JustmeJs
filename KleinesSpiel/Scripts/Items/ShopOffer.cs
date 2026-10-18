@@ -20,7 +20,7 @@ namespace KleinesSpiel.Scripts.Items
             _player = GetTree().GetFirstNodeInGroup("player") as Player.Player;
             _visual = new PickupMotion { Name = "Visual", IsHeart = Slot < 2 };
             Texture2D texture = Slot < 2 ? GD.Load<Texture2D>("res://Resources/Art/heart.tres") : ItemCatalog.Get(Stock.ShopItemIndex).Icon;
-            _visual.AddChild(new Sprite2D { Name = "Sprite", Texture = texture, Scale = Vector2.One * (36f / texture.GetWidth()) });
+            _visual.AddChild(new Sprite2D { Name = "Sprite", Texture = texture, Scale = Vector2.One * ((Slot < 2 ? 20f : 36f) / texture.GetWidth()) });
             AddChild(_visual);
             _price = new Label { Name = "Price", Position = new Vector2(-65, 35), Size = new Vector2(130, 30), HorizontalAlignment = HorizontalAlignment.Center };
             AddChild(_price);
