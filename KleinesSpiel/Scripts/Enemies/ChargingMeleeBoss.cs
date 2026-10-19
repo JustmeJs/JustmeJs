@@ -7,6 +7,8 @@ namespace KleinesSpiel.Scripts.Enemies
         private enum Stage { Chase, Windup, Charge, Recover }
         private Stage _stage;
         private float _timer = 3;
+        private readonly RandomNumberGenerator _attackRandom = new();
+        public override void _Ready() { base._Ready(); _attackRandom.Randomize(); _timer = _attackRandom.RandfRange(2.4f, 4.2f); }
         private Vector2 _aim;
         public string GetChargeStage() => _stage.ToString();
         public Vector2 GetChargeAim() => _aim;
@@ -46,7 +48,7 @@ namespace KleinesSpiel.Scripts.Enemies
                     break;
                 case Stage.Recover:
                     Velocity = Vector2.Zero;
-                    if (_timer <= 0) { _stage = Stage.Chase; _timer = 3.5f * ShotIntervalMultiplier; }
+                    if (_timer <= 0) { _stage = Stage.Chase; _timer = _attackRandom.RandfRange(2.4f, 4.2f) * ShotIntervalMultiplier; }
                     break;
             }
             QueueRedraw();

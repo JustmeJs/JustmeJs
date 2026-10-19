@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://Scripts/Enemies/CastleBoss.cs" id="boss"]
 [ext_resource type="PackedScene" path="res://Scenes/Projectiles/EnemyProjectile.tscn" id="projectile"]
-[ext_resource type="SpriteFrames" path="res://Resources/Animations/demon_boss_frames.tres" id="art"]
+[ext_resource type="SpriteFrames" path="res://Resources/Animations/Directions/castle_warden.tres" id="art"]
 [ext_resource type="Script" path="res://Scripts/Common/ActorAnimator.cs" id="animator"]
 
 [sub_resource type="CircleShape2D" id="body"]
@@ -26,10 +26,11 @@ shape = SubResource("body")
 [node name="Visual" type="Node2D" parent="."]
 modulate = Color(1, 0.84, 0.62, 1)
 script = ExtResource("animator")
+MirrorLeft = true
 Accent = Color(1, 0.78, 0.25, 1)
 
 [node name="Sprite" type="AnimatedSprite2D" parent="Visual"]
 sprite_frames = ExtResource("art")
 animation = &"idle"
 autoplay = "idle"
-scale = Vector2(0.4375, 0.4375)
+scale = Vector2(0.32, 0.32)

@@ -19,6 +19,7 @@ namespace KleinesSpiel.Scripts.Items
                 if (_collected || body is not Player.Player player) return;
                 int added = player.AddCoins(Value);
                 if (added == 0) return;
+                Audio.GameAudio.Instance?.PlayEffect("coin");
                 Value -= added;
                 if (Value > 0) return;
                 _collected = true;

@@ -5,8 +5,13 @@ namespace KleinesSpiel.Scripts.Enemies
 {
     public static class WardenPatterns
     {
-        // Cross / X alternate; the sixth volley is a rarer ring with a navigable gap.
-        public static string Name(int volley) => volley % 6 == 5 ? "Ring" : volley % 2 == 1 ? "X" : "Cross";
+        // Independent weighted draws: 42.5% cross, 42.5% X, 15% ring.
+        public static int Choose(RandomNumberGenerator random)
+        {
+            float roll = random.Randf();
+            return roll < .15f ? 2 : roll < .575f ? 0 : 1;
+        }
+        public static string Name(int volley) => volley == 2 ? "Ring" : volley == 1 ? "X" : "Cross";
         public static IEnumerable<Vector2> Directions(int volley, Vector2 aim)
         {
             if (Name(volley) == "Ring")

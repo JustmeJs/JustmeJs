@@ -6,6 +6,7 @@ namespace KleinesSpiel.Scripts.Common
     public partial class ActorAnimator : Node2D
     {
         [Export] public bool Floating;
+        [Export] public bool MirrorLeft;
         public bool ProceduralPose;
         private float _deathTime;
         [Export] public Color Accent = new Color(0.3f, 0.85f, 1f);
@@ -100,7 +101,7 @@ namespace KleinesSpiel.Scripts.Common
                 _state = state;
                 _sprite.Play(animation);
             }
-            if (_directional) _sprite.FlipH = false;
+            if (_directional) _sprite.FlipH = MirrorLeft && Mathf.Abs(_facing.X) > Mathf.Abs(_facing.Y) && _facing.X < 0;
             else if (Mathf.Abs(_facing.X) > 0.1f) _sprite.FlipH = _facing.X < 0;
             float bob = _dead ? 0 : Floating ? Mathf.Sin(_time * 4) * 2
                 : state == "walk" ? -Mathf.Abs(Mathf.Sin(_time * 14)) * 1.5f

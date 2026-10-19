@@ -7,7 +7,8 @@ namespace KleinesSpiel.Scripts.Enemies
 	public partial class EnemyFourWay : Enemy
 	{
 		public bool BossPatterns;
-        private int _patternVolley;
+        [Export] public ulong AttackSeed;
+        private readonly RandomNumberGenerator _attackRandom = new();
         private string _lastPattern = "Cross";
         public string GetLastPattern() => _lastPattern;
 
@@ -26,6 +27,7 @@ namespace KleinesSpiel.Scripts.Enemies
 		public override void _Ready()
 		{
 			base._Ready();
+            if (AttackSeed == 0) _attackRandom.Randomize(); else _attackRandom.Seed = AttackSeed;
 			_rng.Randomize();
 		}
 
@@ -58,8 +60,9 @@ namespace KleinesSpiel.Scripts.Enemies
 
 			AnimateAttack(GetDirectionToPlayer());
 
-            _lastPattern = BossPatterns ? WardenPatterns.Name(_patternVolley) : "Cross";
-            var directions = WardenPatterns.Directions(BossPatterns ? _patternVolley++ : 0, GetDirectionToPlayer());
+            int pattern = BossPatterns ? WardenPatterns.Choose(_attackRandom) : 0;
+            _lastPattern = WardenPatterns.Name(pattern);
+            var directions = WardenPatterns.Directions(pattern, GetDirectionToPlayer());
 
 			foreach (var direction in directions)
 			{

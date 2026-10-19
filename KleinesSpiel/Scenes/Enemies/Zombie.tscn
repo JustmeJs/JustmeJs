@@ -1,0 +1,31 @@
+[gd_scene load_steps=5 format=3 ]
+
+[ext_resource type="Script" path="res://Scripts/Enemies/Zombie.cs" id="1"]
+
+[ext_resource type="SpriteFrames" path="res://Resources/Animations/Directions/crypt_zombie.tres" id="art"]
+[ext_resource type="Script" path="res://Scripts/Common/ActorAnimator.cs" id="animator"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(28, 28)
+
+[node name="Zombie" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("1")
+MaxHealth = 2.0
+MoveSpeed = 125.0
+ContactDamageHalfHearts = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="Visual" type="Node2D" parent="."]
+script = ExtResource("animator")
+MirrorLeft = true
+Accent = Color(1, 0.4, 0.2, 1)
+
+[node name="Sprite" type="AnimatedSprite2D" parent="Visual"]
+sprite_frames = ExtResource("art")
+animation = &"idle"
+autoplay = "idle"
+scale = Vector2(0.16, 0.16)

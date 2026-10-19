@@ -12,7 +12,7 @@ def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", nargs="?", type=Path,
-                        default=root / "KleinesSpiel_con_assets.zip")
+                        default=root / "Magic Loop.zip")
     output = parser.parse_args().output
     tracked = subprocess.check_output(
         ["git", "ls-files", "-z", "--", "KleinesSpiel/"], cwd=root
@@ -20,7 +20,8 @@ def main():
     files = sorted(name for name in tracked if name and not name.endswith(".import"))
     if "KleinesSpiel/project.godot" not in files:
         raise SystemExit("The tracked project.godot is missing.")
-    directories = {parent.as_posix() + "/" for name in files
+    archive_names = {name: "Magic Loop/" + name.removeprefix("KleinesSpiel/") for name in files}
+    directories = {parent.as_posix() + "/" for name in archive_names.values()
                    for parent in PurePosixPath(name).parents if str(parent) != "."}
     # Godot 4.3 creates folders only when it encounters directory entries.
     # Every parent must therefore precede the files it contains.
@@ -31,7 +32,7 @@ def main():
             info.external_attr = ((stat.S_IFDIR | 0o755) << 16) | 0x10
             archive.writestr(info, b"")
         for name in files:
-            archive.write(root / name, name)
+            archive.write(root / name, archive_names[name])
     with zipfile.ZipFile(output) as archive:
         if archive.testzip() is not None:
             raise SystemExit("ZIP integrity check failed.")

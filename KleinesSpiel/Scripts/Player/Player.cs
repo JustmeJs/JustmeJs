@@ -28,7 +28,7 @@ namespace KleinesSpiel.Scripts.Player
 
 		[ExportGroup("Schiessen")]
 		[Export] public PackedScene ProjectileScene; // Szene des Spieler-Projektils
-		[Export] public float FireCooldownSeconds = 0.4f;
+		[Export] public float FireCooldownSeconds = 0.48f;
 		[Export] public float ProjectileSpeed = 300f;
 		[Export] public float BaseDamage = 1f;
 

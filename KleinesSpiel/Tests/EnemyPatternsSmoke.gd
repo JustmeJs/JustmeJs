@@ -31,13 +31,14 @@ func run():
  await frames(3)
  var boss = load("res://Scenes/Enemies/BossFourWay.tscn").instantiate()
  boss.BossPatterns = true
+ boss.AttackSeed = 1042
  boss.FireCooldownSeconds = .25
  boss.MoveSpeed = 0
  boss.position = Vector2(512,288)
  arena.add_child(boss)
  var seen := {}
  var volleys := []
- for i in range(210):
+ for i in range(1700):
   await frames(1)
   shots = get_nodes_in_group("projectiles")
   if shots.is_empty(): continue
@@ -60,14 +61,16 @@ func run():
     verify(absf(shot.rotation) >= deg_to_rad(27)-.01, "Ring preserves an escape opening toward the target")
   for shot in shots: shot.queue_free()
  verify(seen.size() == 3, "Warden executes cross, X and ring")
- verify(volleys.slice(0,6) == ["Cross","X","Cross","X","Cross","Ring"], "Ring is rarer than cross/X")
+ verify(volleys.count("Ring") > 0 and volleys.count("Ring") < volleys.size() * .3, "Random ring is rarer than cross/X")
+ verify(volleys.count("Cross") > 20 and volleys.count("X") > 20, "Both common patterns remain frequent")
+ verify(volleys.slice(0,6) != volleys.slice(6,12), "Warden does not repeat a fixed cycle")
  boss.queue_free()
  await frames(3)
  boss = load("res://Scenes/Enemies/BossMelee.tscn").instantiate()
  boss.position = Vector2(450,288)
  boss.MoveSpeed = 0
  arena.add_child(boss)
- for i in range(200):
+ for i in range(320):
   if boss.GetChargeStage() == "Windup": break
   await frames(1)
  verify(boss.GetChargeStage() == "Windup", "Melee boss starts visible windup")

@@ -74,6 +74,7 @@ namespace KleinesSpiel.Scripts.Rooms
             _roomContainer = roomContainer;
             _player = player;
             _seed = SeedOverride != 0 ? SeedOverride : Random.Shared.Next(1, int.MaxValue);
+            Audio.GameAudio.Instance?.StartRun(_seed);
             var bag = Enumerable.Range(0, Items.ItemCatalog.Paths.Length).ToList();
             DungeonFloor.Shuffle(bag, new Random(_seed ^ 0x195af));
             _items.Clear();

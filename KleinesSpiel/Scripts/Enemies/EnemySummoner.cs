@@ -5,7 +5,7 @@ namespace KleinesSpiel.Scripts.Enemies
     // Summoners are harmless themselves; their finite living minion cap prevents flooding.
     public partial class EnemySummoner : Enemy
     {
-        private float _summonTimer = 5;
+        private float _summonTimer = 3.5f;
         private Rooms.Room _room;
         public int SummonsCreated { get; private set; }
         public override void _Ready()
@@ -21,12 +21,12 @@ namespace KleinesSpiel.Scripts.Enemies
             _summonTimer -= dt;
             if (_summonTimer <= 0 && _room != null && CurrentHealth > 0)
             {
-                _summonTimer = 5;
+                _summonTimer = 3.5f;
                 if (_room.TrySummonZombie(this))
                 {
                     SummonsCreated++;
-                    Audio.GameAudio.Instance?.PlayEffect("enemy_cast");
-                    AnimateAttack(Vector2.Down);
+                    Audio.GameAudio.Instance?.PlayEffect("summon");
+                    AnimateAttack(GetDirectionToPlayer());
                     Effects.BurstEffect.Spawn(this, GlobalPosition, new Color(0.4f, 1, 0.45f), 32, 0.4f);
                 }
             }

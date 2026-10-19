@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://Scripts/Enemies/EnemySummoner.cs" id="1"]
 
-[ext_resource type="SpriteFrames" path="res://Resources/Animations/imp_frames.tres" id="art"]
+[ext_resource type="SpriteFrames" path="res://Resources/Animations/Directions/crypt_summoner.tres" id="art"]
 [ext_resource type="Script" path="res://Scripts/Common/ActorAnimator.cs" id="animator"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
@@ -12,7 +12,7 @@ size = Vector2(28, 28)
 collision_layer = 4
 collision_mask = 3
 script = ExtResource("1")
-MaxHealth = 4.0
+MaxHealth = 8.0
 MoveSpeed = 0.0
 ContactDamageHalfHearts = 0
 
@@ -21,10 +21,11 @@ shape = SubResource("RectangleShape2D_1")
 
 [node name="Visual" type="Node2D" parent="."]
 script = ExtResource("animator")
+MirrorLeft = true
 Accent = Color(1, 0.4, 0.2, 1)
 
 [node name="Sprite" type="AnimatedSprite2D" parent="Visual"]
 sprite_frames = ExtResource("art")
 animation = &"idle"
 autoplay = "idle"
-scale = Vector2(0.20833333, 0.20833333)
+scale = Vector2(0.18, 0.18)

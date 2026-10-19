@@ -15,6 +15,9 @@ namespace KleinesSpiel.Scripts.Enemies
 		[Export] public float ProjectileDamage = 1f;
 
 		private float _fireCooldownTimer;
+        public bool BossPatterns;
+        private readonly RandomNumberGenerator _attackRandom = new();
+        public override void _Ready() { base._Ready(); _attackRandom.Randomize(); }
 
 		protected override void UpdateBehavior(float dt)
 		{
@@ -39,8 +42,14 @@ namespace KleinesSpiel.Scripts.Enemies
 			_fireCooldownTimer -= dt;
 			if (CanShoot && _fireCooldownTimer <= 0f && PlayerReference != null)
 			{
-				Shoot(directionToPlayer);
-				_fireCooldownTimer = FireCooldownSeconds * ShotIntervalMultiplier;
+				if (BossPatterns && _attackRandom.Randf() < .35f)
+                {
+                    Shoot(directionToPlayer.Rotated(-.18f));
+                    Shoot(directionToPlayer);
+                    Shoot(directionToPlayer.Rotated(.18f));
+                }
+                else Shoot(directionToPlayer);
+				_fireCooldownTimer = FireCooldownSeconds * ShotIntervalMultiplier * (BossPatterns ? _attackRandom.RandfRange(.85f, 1.2f) : 1);
 			}
 		}
 

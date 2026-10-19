@@ -1,12 +1,17 @@
-# Kleines Spiel — juego, assets y validación
+# Magic Loop — juego, assets y validación
 
-## Actualización de combate, sonido y exploración
+## Magic Loop: animaciones, música y equilibrio
+
+- Vara: un disparo cada **0,48 s** (antes 0,4) y **220 píxeles de alcance**, algo menos de media sala. Las mejoras de velocidad no amplían ese alcance.
+- Trece hojas de personajes con poses de caminar, preparación, ataque y derrota; vistas frontal, trasera y lateral. El perfil izquierdo se refleja de las poses derechas para conservar coherencia. Se mantienen las animaciones direccionales del mago.
+- La cripta tiene seis diseños: corredor funerario, sepulturas, canales, círculo ritual, osario y mosaico derruido.
+- Se eliminan los avisos «Green coin: Shop» y «Tab: Run time»; la tienda y el reloj siguen funcionando.
 
 - **Una tienda garantizada por nivel**, marcada desde el inicio con una moneda verde en el minimapa. Dos corazones a 3 monedas y un pasivo a 15; compra con E.
 - Los arqueros disparan **flechas orientadas**. El castillo usa arqueros humanos, caballeros, hechiceros y guardianes acorazados; la cripta conserva sus criaturas. Los invocadores y zombis llevan hábitos de culto distintos en cada zona, con movimiento, ataque, daño y derrota animados.
-- El **invocador no ataca ni hace daño por contacto**. Cada cinco segundos intenta crear un zombi más rápido que el melee habitual, en una posición libre y alejada del jugador. Hay un máximo de cuatro zombis vivos por sala; no dan monedas ni corazones y deben derrotarse para abrir las puertas.
-- El jefe melee se detiene, tiembla y marca una línea antes de embestir hacia la posición fijada del jugador. El Castle Warden alterna cruz y X; cada sexta ráfaga forma un anillo con un hueco para escapar.
-- El Regent reduce los avisos de abanico/embestida a 0,40/0,45 segundos (0,33/0,38 en fase dos), aumenta el abanico y el tamaño y alcance de la embestida. Su anillo tiene una animación de 0,18 segundos, sin marcas de aviso sobre el suelo, y conserva un hueco para esquivarlo.
+- El **invocador no ataca ni hace daño por contacto**. Tiene 8 puntos de vida base y cada 3,5 segundos intenta crear un zombi más rápido que el melee habitual, en una posición libre y alejada del jugador. Hay un máximo de cuatro zombis vivos por sala; no dan monedas ni corazones y deben derrotarse para abrir las puertas.
+- El jefe melee se detiene, tiembla y marca una línea antes de embestir hacia la posición fijada del jugador. El Castle Warden elige al azar cruz (42,5 %), X (42,5 %) o un anillo con hueco para escapar (15 %). Los intervalos de las embestidas y las ráfagas de los demás jefes también varían; el arquero jefe puede lanzar tres flechas.
+- El Regent elige sus tres ataques al azar, sin repetir el inmediatamente anterior. Reduce los avisos de abanico/embestida a 0,40/0,45 segundos (0,33/0,38 en fase dos), aumenta el abanico y el tamaño y alcance de la embestida. Su anillo tiene una animación de 0,18 segundos, sin marcas de aviso sobre el suelo, y conserva un hueco para esquivarlo.
 - Corazones de suelo y tienda más pequeños. Curación aleatoria: **5 %** por enemigo normal y **25 %** por jefe intermedio; los invocados y el jefe final no sueltan corazones.
 - Los portales colocan al jugador **en el centro** y cancelan cualquier dash o retroceso pendiente. Se mantienen los movimientos diagonales normalizados, también al disparar y deslizarse junto a paredes.
 - La vida se muestra con corazones, sin el contador numérico duplicado. Se retira la instrucción de buscar el tesoro como objetivo principal.
@@ -15,7 +20,7 @@
 
 ### Música y efectos
 
-Nueve pistas instrumentales originales: exploración de cripta y castillo, tres encuentros de jefe en la cripta y cuatro en el castillo, incluido el Regent. La música se repite sin reiniciarse al cambiar entre salas normales; cambia al entrar en combate con un jefe y vuelve al tema de exploración al derrotarlo. Se pausa con el juego. Nueve efectos breves cubren vara, arco, magia enemiga, impactos, golpes, daño, derrotas y carga. La muerte del jugador tiene un efecto discreto de 0,6 segundos.
+Trece pistas instrumentales originales: tres de exploración para la cripta, tres para el castillo, tres encuentros de jefe en la cripta y cuatro en el castillo, incluido el Regent. Las tres pistas de cada zona se barajan al comenzar: cada nivel tiene una distinta y ninguna vuelve a seleccionarse en otro nivel de la misma partida. La cripta usa drones graves y campanas; el castillo, cuerdas pulsadas y armonías medievales solemnes. La música se repite sin reiniciarse al cambiar entre salas normales; cambia al entrar en combate con un jefe y vuelve al tema de exploración al derrotarlo. Se pausa con el juego. Doce efectos breves cubren vara, arco, magia enemiga, impactos, golpes, daño, derrotas, carga, monedas, invocación y gemidos de zombis. La vara tiene un pulso suave de 0,16 s a −24 dB; los zombis gimen cada 4–7 s mientras siguen vivos, con un límite global para evitar superposición excesiva. La muerte del jugador tiene un efecto discreto de 0,6 segundos.
 
 No se utilizaron grabaciones, melodías ni samples de terceros. Los archivos generados se ofrecen bajo CC0 1.0; la licencia y procedencia están en `Assets/Audio/LICENSE.md`. El generador reproducible es `Tools/generate_audio.py` en la raíz del repositorio (necesita Python, NumPy y FFmpeg; no son necesarios para jugar).
 
@@ -25,7 +30,7 @@ No se utilizaron grabaciones, melodías ni samples de terceros. Los archivos gen
 ## Abrir y jugar
 
 1. Extrae el ZIP actualizado en una carpeta vacía.
-2. Importa `KleinesSpiel/project.godot` con **Godot 4.3 .NET** y **.NET SDK 8**. La edición estándar no ejecuta C#.
+2. Importa `Magic Loop/project.godot` con **Godot 4.3 .NET** y **.NET SDK 8**. La edición estándar no ejecuta C#.
 3. Compila con Build del editor o `dotnet build` desde esta carpeta.
 4. Pulsa **F5** y elige **Play**.
 
@@ -35,7 +40,7 @@ Arranca a pantalla completa y se adapta al monitor, incluido Full HD (1920 × 10
 
 En todos los menús puedes seleccionar con cualquiera de las cuatro flechas, confirmar con Enter/Espacio o usar el ratón. La primera opción recibe el foco al abrirlos y la navegación vuelve al inicio al llegar al final. Espacio al confirmar no activa el dash al regresar al juego.
 
-El juego empieza en inglés. El botón de idioma del menú principal alterna inglés y alemán y actualiza el texto inmediatamente. La preferencia se guarda en `user://settings.cfg`, fuera del proyecto, y se conserva al reiniciar. Los menús, HUD, instrucciones, nombres de niveles, portales, jefes y objetos se muestran en el idioma elegido. El título propio sigue siendo «Kleines Spiel».
+El juego empieza en inglés. El botón de idioma del menú principal alterna inglés y alemán y actualiza el texto inmediatamente. La preferencia se guarda en `user://settings.cfg`, fuera del proyecto, y se conserva al reiniciar. Los menús, HUD, instrucciones, nombres de niveles, portales, jefes y objetos se muestran en el idioma elegido. El título propio sigue siendo «Magic Loop».
 
 ![Menú en inglés](Documentation/menu_english.png)
 
@@ -141,10 +146,10 @@ La prioridad de estados es muerte, daño, dash, ataque, movimiento y reposo. Al 
 - `Scripts/Enemies/CastleBoss.cs`: ataques, fases y presentación del jefe final.
 - `Scripts/Items/ItemCatalog.cs` y `Resources/Items/`: seis mejoras, iconos y textos en ambos idiomas.
 - `Assets/Sprites/hero_mage_directional.png` y `hero_mage_manifest.json`: atlas y regiones del mago.
-- `Assets/Sprites/characters_animated.png` y `Resources/Animations/`: secuencias de enemigos y jefes.
+- `Assets/Sprites/Directions/` y `Resources/Animations/Directions/`: trece hojas direccionales de enemigos y jefes; `Tools/build_directional_frames.py` genera los recursos de fotogramas sin modificar los PNG. Los antiguos atlas de enemigos fueron retirados.
 - `Assets/Sprites/dungeon_atlas.png`: iconos y proyectiles activos; `arcane_lens.svg`: sexto icono.
 
-Los gráficos originales de reemplazo, recursos estáticos sustituidos y escenas del recorrido fijo ya fueron eliminados. Los atlas compartidos permanecen completos porque contienen regiones activas. Las imágenes de `Documentation/` son referencias y no se cargan durante el juego. El atlas del mago fue generado con IA en una revisión anterior; no se usaron packs comerciales ni se atribuye una licencia nueva a los archivos originales.
+Los gráficos originales de reemplazo, recursos estáticos sustituidos y escenas del recorrido fijo ya fueron eliminados. Los atlas compartidos permanecen completos porque contienen regiones activas. Las imágenes de `Documentation/` son referencias y no se cargan durante el juego. Las hojas del mago y los enemigos se generaron con IA; no se usaron packs comerciales ni se atribuye una licencia nueva a los archivos originales.
 
 ## Comprobaciones
 
@@ -164,6 +169,7 @@ godot --headless --fixed-fps 60 --path . --script res://Tests/AnimationSmoke.gd
 godot --headless --fixed-fps 60 --path . --script res://Tests/MageCastingSmoke.gd
 godot --headless --fixed-fps 60 --path . --script res://Tests/ExpansionSmoke.gd
 godot --headless --fixed-fps 60 --path . --script res://Tests/EnemyPatternsSmoke.gd
+godot --headless --fixed-fps 60 --path . --script res://Tests/MagicLoopSmoke.gd
 ```
 
 Las pruebas comprueban 1.200 mapas con una tienda y un tesoro por nivel, puertas físicas en las cuatro direcciones, recorrido de los seis niveles, un objeto distinto por nivel, transición de entorno en el cuarto, conservación de mejoras, portales garantizados, victoria y reinicio. Las pruebas de menú envían teclas reales y arrancan procesos nuevos de Godot para comprobar la persistencia. Las pruebas de combate comprueban separación física, paredes, invulnerabilidad y los tres ataques del jefe final, incluyendo contacto real durante su embestida. Las nuevas pruebas cubren la espera de 1,5 s en los seis tipos de enemigo con proyectiles, la pausa del temporizador, dificultad creciente y rutas físicas en las seis variantes de sala. Comprueban monedas recogidas una sola vez, compras con E, saldo insuficiente, rechazo de curación con vida completa, stock agotado, revisitas, pausa y transición de nivel. Una muestra de 90 niveles y 2.151 enemigos valida la proporción de monedas.
@@ -171,3 +177,5 @@ Las pruebas comprueban 1.200 mapas con una tienda y un tesoro por nivel, puertas
 Desde la raíz del repositorio, `python3 Tools/audit_assets.py` comprueba referencias, recursos visuales sin uso y seis iconos/efectos distintos. El paquete excluye `.godot`, metadatos `.import` regenerables y compilados; contiene entradas de carpetas para Godot. Antes de distribuirlo se valida extracción, compilación y pruebas desde una copia limpia.
 
 Las pruebas de progresión y las vistas previas usan derrotas controladas, protección del jugador y fondos de prueba para las compras; no equivalen a una partida completa ganada sin asistencia.
+
+La batería `MagicLoopSmoke.gd` comprueba 300 repartos musicales sin repetición, cadencia real con teclado, alcance a tres velocidades, sonido al recoger monedas, gemidos de zombis vivos, poses direccionales y decisiones del Regent en seis semillas. Los nombres internos del proyecto C# se conservan por compatibilidad; el título, carpeta distribuida y archivo ZIP se llaman Magic Loop.

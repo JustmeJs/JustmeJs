@@ -20,7 +20,9 @@ namespace KleinesSpiel.Scripts.Enemies
         private float _visualTime;
         private int _volley;
         private int _combatPhase = 1;
-        private int _nextPattern;
+        private readonly RandomNumberGenerator _attackRandom = new();
+        private int _lastPattern = -1;
+        [Export] public ulong AttackSeed;
         private readonly int[] _attackCounts = new int[3];
         private int _totalShots;
         private bool _dead;
@@ -29,6 +31,7 @@ namespace KleinesSpiel.Scripts.Enemies
         public override void _Ready()
         {
             base._Ready();
+            if (AttackSeed == 0) _attackRandom.Randomize(); else _attackRandom.Seed = AttackSeed;
             _arenaCenter = GlobalPosition;
             _projectileGroup = $"regent_projectiles_{GetInstanceId()}";
             AddToGroup("final_boss");
@@ -73,7 +76,10 @@ namespace KleinesSpiel.Scripts.Enemies
 
         private void BeginTelegraph()
         {
-            _pattern = (Pattern)(_nextPattern++ % 3);
+            int next = _attackRandom.RandiRange(0, _lastPattern < 0 ? 2 : 1);
+            if (_lastPattern >= 0 && next >= _lastPattern) next++;
+            _lastPattern = next;
+            _pattern = (Pattern)next;
             _stage = Stage.Telegraph;
             _lockedAim = GetDirectionToPlayer();
             if (_lockedAim == Vector2.Zero) _lockedAim = Vector2.Down;

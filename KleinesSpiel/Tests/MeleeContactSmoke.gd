@@ -70,7 +70,7 @@ func run() -> void:
   verify(await wait_for_hit(player), scene_name + " makes real contact")
   var hit_health: int = player.GetCurrentHealthHalfHearts()
   verify(hit_health == 8 - enemy.ContactDamageHalfHearts, scene_name + " deals exactly one contact hit")
-  verify(enemy.get_node("Visual/Sprite").animation == &"attack", scene_name + " contact plays attack")
+  verify(enemy.get_node("Visual/Sprite").animation.begins_with("attack"), scene_name + " contact plays attack")
   var enemy_at_hit: Vector2 = enemy.position
   var gap_at_hit: float = player.position.distance_to(enemy.position)
   await frames(10)

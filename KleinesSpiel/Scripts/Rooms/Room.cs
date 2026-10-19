@@ -70,8 +70,8 @@ namespace KleinesSpiel.Scripts.Rooms
                 {
                     Name = "TutorialLabel", Position = new Vector2(305, 120), Size = new Vector2(414, 110),
                     Text = Floor.Name + "\n" + Common.Localization.Text(
-                        "WASD: Move   Arrows: Cast\nSpace: Dash   Esc: Pause\nTab: Run time   Green coin: Shop",
-                        "WASD: Bewegen   Pfeile: Zaubern\nLeertaste: Dash   Esc: Pause\nTab: Spielzeit   Grüne Münze: Laden"),
+                        "WASD: Move   Arrows: Cast\nSpace: Dash   Esc: Pause",
+                        "WASD: Bewegen   Pfeile: Zaubern\nLeertaste: Dash   Esc: Pause"),
                     HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
                     AutowrapMode = TextServer.AutowrapMode.WordSmart, MouseFilter = Control.MouseFilterEnum.Ignore
                 });
@@ -172,8 +172,8 @@ namespace KleinesSpiel.Scripts.Rooms
             enemy.CoinDropValue = boss ? (Floor.IsFinal ? 0 : Items.Economy.BossCoins) : Items.Economy.EnemyDrop(_lootRandom);
             if (summoned) { enemy.CoinDropValue = 0; enemy.HeartDropChance = 0; enemy.AddToGroup("summoned_zombies"); }
             Enemies.EnemyAppearance.Apply(enemy, Floor.IsCastle, boss, summoned);
+            if (enemy is Enemies.EnemyRanged ranged) ranged.BossPatterns = boss;
             if (enemy is Enemies.EnemyFourWay fourWay) fourWay.BossPatterns = boss;
-            if (enemy is Enemies.Boss mixedBoss) mixedBoss.CastlePatterns = Floor.IsCastle;
             enemy.Position = position;
             enemy.Defeated += OnDefeated;
             _alive++;
@@ -192,7 +192,7 @@ namespace KleinesSpiel.Scripts.Rooms
                     || RoomLayouts.Obstacles(Definition.Layout).Any(r => r.Grow(18).HasPoint(at))
                     || (player != null && at.DistanceTo(ToLocal(player.GlobalPosition)) < 60)
                     || _enemies.GetChildren().OfType<Enemies.Enemy>().Any(e => e.GetCurrentHealth() > 0 && e.Position.DistanceTo(at) < 30)) continue;
-                var zombie = GD.Load<PackedScene>("res://Scenes/Enemies/EnemyMelee.tscn").Instantiate<Enemies.EnemyMelee>();
+                var zombie = GD.Load<PackedScene>("res://Scenes/Enemies/Zombie.tscn").Instantiate<Enemies.Zombie>();
                 zombie.MaxHealth = 2; zombie.MoveSpeed = 125;
                 AddEnemy(zombie, at, true);
                 Effects.BurstEffect.Spawn(this, ToGlobal(at), new Color(0.4f, 1, 0.45f), 25, 0.3f);

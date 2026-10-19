@@ -9,7 +9,11 @@ namespace KleinesSpiel.Scripts.Projectiles
 	{
 		[Export] public float LifetimeSeconds = 3f; // zerstoert sich nach dieser Zeit von selbst
 		[Export] public bool Piercing = false;
-        [Export] public bool IsArrow; // true = durchdringt einen Gegner (Item-Effekt)
+        [Export] public bool IsArrow;
+        // Distance is independent of projectile speed upgrades. Zero means unlimited.
+        [Export] public float MaxTravelDistance;
+        private float _distanceTravelled;
+        public float GetDistanceTravelled() => _distanceTravelled;
 
 		private Vector2 _direction = Vector2.Zero;
 		private float _speed;
@@ -70,7 +74,11 @@ namespace KleinesSpiel.Scripts.Projectiles
 			}
 			QueueRedraw();
 
-			Position += _direction * _speed * dt;
+			float step = _speed * dt;
+            if (MaxTravelDistance > 0) step = Mathf.Min(step, Mathf.Max(0, MaxTravelDistance - _distanceTravelled));
+            Position += _direction * step;
+            _distanceTravelled += step;
+            if (MaxTravelDistance > 0 && _distanceTravelled >= MaxTravelDistance) { Impact(); return; }
 
 			_lifetimeTimer -= dt;
 			if (_lifetimeTimer <= 0f)

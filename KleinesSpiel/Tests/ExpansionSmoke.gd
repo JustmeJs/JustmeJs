@@ -78,23 +78,28 @@ func run() -> void:
   for e in room.get_node("Enemies").get_children():
    if e != summoner and e.has_method("TakeDamage"): e.TakeDamage(10000)
   var before: int = room.GetAliveCount()
+  verify(summoner.GetMaxHealth() >= 8, "Summoner has increased health")
   verify(before == 1 and summoner.ContactDamageHalfHearts == 0, "Only summoner remains; has no contact attack")
-  verify(summoner.get_node("Visual/Sprite").sprite_frames.get_frame_texture("idle",0).atlas.resource_path.ends_with("zone_enemies.png"), "Cult summoner uses new hooded art")
-  await frames(275)
-  verify(get_nodes_in_group("summoned_zombies").is_empty(), "No summon before five seconds")
+  verify(summoner.get_node("Visual/Sprite").sprite_frames.get_frame_texture("idle",0).atlas.resource_path.ends_with("crypt_summoner.png"), "Cult summoner uses new hooded art")
+  await frames(185)
+  verify(get_nodes_in_group("summoned_zombies").is_empty(), "No summon before 3.5 seconds")
   paused = true
   await frames(90)
   verify(get_nodes_in_group("summoned_zombies").is_empty(), "Pause freezes summon timer")
   paused = false
-  await frames(35)
+  for i in range(35):
+   if not get_nodes_in_group("summoned_zombies").is_empty(): break
+   await frames(1)
+  await frames(2)
+  verify(audio.get_children().any(func(n): return n is AudioStreamPlayer and n.stream != null and n.stream.resource_path.ends_with("/summon.wav")), "Successful summon plays its own sound")
   var zombies = get_nodes_in_group("summoned_zombies")
-  verify(zombies.size() == 1 and room.GetAliveCount() == before+1, "One zombie spawns at five seconds and participates in room clear")
+  verify(zombies.size() == 1 and room.GetAliveCount() == before+1, "One zombie spawns at 3.5 seconds and participates in room clear")
   if not zombies.is_empty():
    var zombie = zombies[0]
    verify(zombie.MoveSpeed > 85*.8 and zombie.CoinDropValue == 0 and zombie.HeartDropChance == 0, "Zombies move faster than melee and cannot farm loot")
    zombie.set_physics_process(false)
   for wave in range(4):
-   await frames(301)
+   await frames(211)
    for zombie in get_nodes_in_group("summoned_zombies"): zombie.set_physics_process(false)
   verify(get_nodes_in_group("summoned_zombies").size() == 4, "Summoner respects four living minion cap")
   summoner.TakeDamage(10000)
@@ -116,7 +121,7 @@ func run() -> void:
   verify(manager.GetCurrentRoom().get_node("ShopStock").get_child_count() == 3, "Real reachable stocked shop on floor " + str(floor_number))
   var shop_heart = manager.GetCurrentRoom().get_node("ShopStock/Offer0/Visual/Sprite")
   verify(shop_heart.texture.get_width() * shop_heart.scale.x < 23, "Shop heart uses smaller art")
-  verify(audio.GetCurrentTrack() == ("crypt_rooms" if floor_number < 4 else "castle_rooms"), "Exploration music matches zone")
+  verify(audio.GetCurrentTrack() == audio.GetExplorationTrack(floor_number), "Exploration music matches zone")
   var variants := {}
   for entry in graph.values():
    if entry.kind != "Normal": continue
@@ -128,17 +133,17 @@ func run() -> void:
     verify(is_equal_approx(e.HeartDropChance,.05), "Normal heart chance reduced to five percent")
     if floor_number >= 4:
      var tex = e.get_node("Visual/Sprite").sprite_frames.get_frame_texture("idle",0)
-     verify(tex.atlas.resource_path.ends_with("zone_enemies.png"), "Castle enemies use zone-specific art")
+     verify(tex.atlas.resource_path.get_file().begins_with("castle_"), "Castle enemies use zone-specific art")
    await clear_room()
-  if floor_number >= 4: verify(variants.size() == 6, "Castle floor has six room designs")
+  verify(variants.size() == 6, "Every floor has six room designs")
   var boss_room: Dictionary = graph.values().filter(func(r): return r.kind == "Boss")[0]
   await navigate(boss_room.id)
-  verify(audio.GetCurrentTrack() not in ["crypt_rooms","castle_rooms"], "Boss starts a distinct soundtrack")
+  verify(audio.GetCurrentTrack() != audio.GetExplorationTrack(floor_number), "Boss starts a distinct soundtrack")
   var music = audio.get_node("Music")
   verify(music.playing and music.stream.loop, "Boss music plays as seamless loop")
   await clear_room()
   if floor_number == 6: break
-  verify(audio.GetCurrentTrack() in ["crypt_rooms","castle_rooms"], "Cleared boss restores exploration music")
+  verify(audio.GetCurrentTrack() == audio.GetExplorationTrack(floor_number), "Cleared boss restores exploration music")
   var portal = manager.GetCurrentRoom().get_node("ZonePortal")
   var old_time: float = manager.GetRunSeconds()
   player.position = portal.global_position

@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://Scripts/Enemies/EnemyFourWay.cs" id="1"]
 [ext_resource type="PackedScene" path="res://Scenes/Projectiles/EnemyProjectile.tscn" id="2"]
 
-[ext_resource type="SpriteFrames" path="res://Resources/Animations/watcher_frames.tres" id="art"]
+[ext_resource type="SpriteFrames" path="res://Resources/Animations/Directions/crypt_watcher.tres" id="art"]
 [ext_resource type="Script" path="res://Scripts/Common/ActorAnimator.cs" id="animator"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
@@ -23,6 +23,7 @@ shape = SubResource("RectangleShape2D_1")
 
 [node name="Visual" type="Node2D" parent="."]
 script = ExtResource("animator")
+MirrorLeft = true
 Floating = true
 Accent = Color(0.8, 0.3, 1, 1)
 
@@ -30,4 +31,4 @@ Accent = Color(0.8, 0.3, 1, 1)
 sprite_frames = ExtResource("art")
 animation = &"idle"
 autoplay = "idle"
-scale = Vector2(0.20833333, 0.20833333)
+scale = Vector2(0.18, 0.18)

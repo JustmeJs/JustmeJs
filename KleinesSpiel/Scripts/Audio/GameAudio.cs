@@ -13,6 +13,10 @@ namespace KleinesSpiel.Scripts.Audio
         private readonly Dictionary<string, ulong> _lastEffect = new();
         private Tween _fade;
         private bool _ended = true;
+        private string[] _runMusic = RunMusic.Create(0);
+        public void StartRun(int seed) { OnRunEnded(); _lastEffect.Clear(); _runMusic = RunMusic.Create(seed); }
+        public string GetExplorationTrack(int floor) => _runMusic[Mathf.Clamp(floor, 1, 6) - 1];
+        public string[] PreviewMusic(int seed) => RunMusic.Create(seed);
         private string _track = "";
         public string GetCurrentTrack() => _track;
         public bool IsMusicPaused() => _music.StreamPaused;
@@ -37,6 +41,13 @@ namespace KleinesSpiel.Scripts.Audio
         {
             ["arrow"] = "res://Assets/Audio/arrow.wav",
             ["cast"] = "res://Assets/Audio/cast.wav",
+            ["coin"] = "res://Assets/Audio/coin.wav",
+            ["summon"] = "res://Assets/Audio/summon.wav",
+            ["zombie"] = "res://Assets/Audio/zombie.wav",
+            ["crypt_ossuary"] = "res://Assets/Audio/crypt_ossuary.ogg",
+            ["crypt_depths"] = "res://Assets/Audio/crypt_depths.ogg",
+            ["castle_gallery"] = "res://Assets/Audio/castle_gallery.ogg",
+            ["castle_watch"] = "res://Assets/Audio/castle_watch.ogg",
             ["castle_archer"] = "res://Assets/Audio/castle_archer.ogg",
             ["castle_champion"] = "res://Assets/Audio/castle_champion.ogg",
             ["castle_rooms"] = "res://Assets/Audio/castle_rooms.ogg",
@@ -65,7 +76,7 @@ namespace KleinesSpiel.Scripts.Audio
         public void EnterRoom(DungeonFloor floor, Room room)
         {
             _ended = false;
-            string track = floor.IsCastle ? "castle_rooms" : "crypt_rooms";
+            string track = GetExplorationTrack(floor.Zone);
             if (room.Definition.Kind == RoomMapType.Boss && !room.IsCleared())
             {
                 string boss = System.IO.Path.GetFileNameWithoutExtension(floor.BossScene);
@@ -88,12 +99,12 @@ namespace KleinesSpiel.Scripts.Audio
         {
             // Polyphony and per-effect cooldown keep volleys from becoming loud bursts.
             ulong now = Time.GetTicksMsec();
-            if (_lastEffect.TryGetValue(name, out ulong last) && now - last < 65) return;
+            if (_lastEffect.TryGetValue(name, out ulong last) && now - last < (name == "zombie" ? 1400UL : 65UL)) return;
             _lastEffect[name] = now;
             var voice = _voices.Find(v => !v.Playing);
             if (voice == null) { if (name != "death") return; voice = _voices[0]; voice.Stop(); }
             voice.Stream = Load(name, false);
-            voice.VolumeDb = name == "death" ? -18 : name == "impact" || name == "enemy_death" ? -22 : -16;
+            voice.VolumeDb = name is "cast" or "zombie" ? -24 : name == "death" ? -18 : name == "impact" || name == "enemy_death" ? -22 : -16;
             voice.StreamPaused = false;
             voice.Play();
         }

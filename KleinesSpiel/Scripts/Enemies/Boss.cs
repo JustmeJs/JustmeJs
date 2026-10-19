@@ -9,8 +9,7 @@ namespace KleinesSpiel.Scripts.Enemies
 	// MoveSpeed sollte im Editor unter 150 px/s bleiben (nie schneller als der Spieler).
 	public partial class Boss : Enemy
 	{
-		public bool CastlePatterns;
-        private int _patternVolley;
+        private readonly RandomNumberGenerator _attackRandom = new();
         private string _lastPattern = "Cross";
         public string GetLastPattern() => _lastPattern;
 
@@ -36,7 +35,8 @@ namespace KleinesSpiel.Scripts.Enemies
 		public override void _Ready()
 		{
 			base._Ready();
-			_phaseTimer = ChasePhaseSeconds * ShotIntervalMultiplier;
+            _attackRandom.Randomize();
+			_phaseTimer = ChasePhaseSeconds * ShotIntervalMultiplier * _attackRandom.RandfRange(.75f, 1.3f);
 			_timeBetweenShots = ShootPhaseSeconds / Mathf.Max(ShotsPerShootPhase, 1f) * ShotIntervalMultiplier;
 		}
 
@@ -51,7 +51,7 @@ namespace KleinesSpiel.Scripts.Enemies
 				if (_phaseTimer <= 0f)
 				{
 					_currentPhase = Phase.Shooting;
-					_phaseTimer = ShootPhaseSeconds;
+					_phaseTimer = ShootPhaseSeconds * _attackRandom.RandfRange(.8f, 1.3f);
 					_shotTimer = 0f;
 				}
 			}
@@ -69,7 +69,7 @@ namespace KleinesSpiel.Scripts.Enemies
 				if (_phaseTimer <= 0f)
 				{
 					_currentPhase = Phase.Chasing;
-					_phaseTimer = ChasePhaseSeconds * ShotIntervalMultiplier;
+					_phaseTimer = ChasePhaseSeconds * ShotIntervalMultiplier * _attackRandom.RandfRange(.75f, 1.3f);
 				}
 			}
 		}
@@ -81,8 +81,9 @@ namespace KleinesSpiel.Scripts.Enemies
 
 			AnimateAttack(GetDirectionToPlayer());
 
-            _lastPattern = CastlePatterns ? WardenPatterns.Name(_patternVolley) : "Cross";
-            var directions = WardenPatterns.Directions(CastlePatterns ? _patternVolley++ : 0, GetDirectionToPlayer());
+            int pattern = WardenPatterns.Choose(_attackRandom);
+            _lastPattern = WardenPatterns.Name(pattern);
+            var directions = WardenPatterns.Directions(pattern, GetDirectionToPlayer());
 
 			foreach (var direction in directions)
 			{

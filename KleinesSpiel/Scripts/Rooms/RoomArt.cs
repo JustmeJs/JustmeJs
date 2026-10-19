@@ -31,7 +31,7 @@ namespace KleinesSpiel.Scripts.Rooms
         public override void _Draw()
         {
             if (_wall == null) return;
-            if (Castle) DrawCastleFloor();
+            if (Castle) DrawCastleFloor(); else DrawCryptFloor();
             foreach (string group in new[] { "Walls", "Obstacles" })
             {
                 var bodies = GetParent().GetNodeOrNull<Node2D>(group);
@@ -44,6 +44,7 @@ namespace KleinesSpiel.Scripts.Rooms
                     DrawTextureRect(_wall, rect, true, StoneTint);
                     if (group == "Obstacles")
                     {
+                        if (!Castle) DrawCryptObstacle(rect);
                         if (Castle && Design is 2 or 4)
                         {
                             DrawRect(rect.Grow(-3), new Color(0.25f, 0.13f, 0.07f));
@@ -84,6 +85,72 @@ namespace KleinesSpiel.Scripts.Rooms
             }
             DrawTorch(new Vector2(352, 67), 0);
             DrawTorch(new Vector2(672, 67), 1.7f);
+        }
+
+        private void DrawCryptFloor()
+        {
+            var hues = new[] { new Color(.13f,.15f,.2f), new Color(.18f,.16f,.14f),
+                new Color(.09f,.17f,.16f), new Color(.14f,.10f,.2f), new Color(.20f,.13f,.13f), new Color(.12f,.14f,.15f) };
+            Color hue = hues[Mathf.Clamp(Design,0,5)];
+            for (int x = 0; x < 10; x++) for (int y = 0; y < 10; y++)
+            {
+                var at = new Vector2(272+x*48,48+y*48);
+                DrawRect(new Rect2(at+Vector2.One,Vector2.One*46), (x+y)%2==0 ? hue : hue*.85f);
+                if ((x*3+y*7+Design)%5 == 0)
+                    DrawPolyline(new[] {at+new Vector2(8,6),at+new Vector2(20,19),at+new Vector2(15,28),at+new Vector2(30,43)}, new Color(.03f,.04f,.06f,.8f), 2);
+            }
+            var center = new Vector2(512,288);
+            Color dust = new Color(.38f,.4f,.37f,.45f);
+            switch (Design)
+            {
+                case 0: // An old processional aisle, with worn stone crosses.
+                    DrawRect(new Rect2(486,64,52,448), new Color(.23f,.22f,.2f,.65f));
+                    for (int y=120;y<500;y+=85)
+                    { DrawLine(new Vector2(503,y),new Vector2(521,y),dust,2); DrawLine(new Vector2(512,y-10),new Vector2(512,y+16),dust,2); }
+                    break;
+                case 1: // Four burial plots; collider art becomes carved tombs.
+                    foreach (var p in new[] {new Vector2(416,192),new Vector2(608,192),new Vector2(416,384),new Vector2(608,384)})
+                    { DrawRect(new Rect2(p-new Vector2(38,42),new Vector2(76,84)),dust,false,2); DrawCircle(p+new Vector2(0,36),3,new Color(.7f,.55f,.25f)); }
+                    break;
+                case 2: // Damp crypt, shallow green channels painted onto traversable floor.
+                    for(int y=100;y<500;y+=96)
+                    { DrawRect(new Rect2(300,y,424,14),new Color(.08f,.28f,.24f,.6f)); DrawLine(new Vector2(306,y+4),new Vector2(718,y+4),new Color(.3f,.5f,.38f,.3f),2); }
+                    break;
+                case 3: // Astral burial chamber, broken ritual rings.
+                    for(int r=80;r<=160;r+=40)
+                        DrawArc(center,r,.3f,r%80==0 ? 5.7f : 4.9f,48,new Color(.5f,.32f,.68f,.35f),2);
+                    for(int i=0;i<8;i++)
+                    { var p=center+Vector2.Right.Rotated(i*Mathf.Tau/8)*140; DrawLine(p-Vector2.Down*7,p+Vector2.Down*7,dust,2); }
+                    break;
+                case 4: // Ossuary rows and a narrow crimson processional rug.
+                    DrawRect(new Rect2(493,80,38,416),new Color(.29f,.08f,.1f,.7f));
+                    for(int y=110;y<500;y+=65) foreach(int x in new[]{314,710})
+                    { DrawCircle(new Vector2(x,y),6,dust); DrawCircle(new Vector2(x-2,y-1),1.5f,Colors.Black); DrawCircle(new Vector2(x+2,y-1),1.5f,Colors.Black); }
+                    break;
+                case 5: // Collapsed burial room: scattered chips around a sunken mosaic.
+                    DrawRect(new Rect2(358,134,308,308),dust,false,3);
+                    for(int i=0;i<26;i++)
+                    { var p=new Vector2(300+(i*97)%420,85+(i*67)%405); DrawColoredPolygon(new[]{p,p+new Vector2(7,-3),p+new Vector2(11,5),p+new Vector2(2,7)},new Color(.25f,.27f,.25f,.65f)); }
+                    break;
+            }
+        }
+        private void DrawCryptObstacle(Rect2 rect)
+        {
+            DrawRect(rect.Grow(-4), new Color(.21f,.22f,.24f));
+            DrawRect(rect.Grow(-7), new Color(.40f,.39f,.34f), false, 2);
+            var at=rect.GetCenter();
+            if (Design == 2 || Design == 1)
+            {
+                DrawLine(at-new Vector2(0,12),at+new Vector2(0,14),new Color(.58f,.54f,.40f),3);
+                DrawLine(at-new Vector2(9,4),at+new Vector2(9,-4),new Color(.58f,.54f,.40f),3);
+            }
+            else
+            {
+                DrawCircle(at,7,new Color(.55f,.51f,.40f));
+                DrawCircle(at+new Vector2(-3,-1),2,new Color(.07f,.06f,.06f));
+                DrawCircle(at+new Vector2(3,-1),2,new Color(.07f,.06f,.06f));
+                DrawLine(at+new Vector2(-3,5),at+new Vector2(3,5),new Color(.07f,.06f,.06f),2);
+            }
         }
 
         private void DrawCastleFloor()
