@@ -95,8 +95,11 @@ namespace KleinesSpiel.Scripts.Enemies
 		protected void AnimateAttack(Vector2 direction)
 		{
 			_animator?.PlayAttack(direction);
-			Effects.BurstEffect.Spawn(this, GlobalPosition + direction * 16,
-				new Color(1, 0.45f, 0.2f), 11, 0.18f);
+            if (_animator?.RadialAttack == true)
+                foreach (var side in new[] { Vector2.Up, Vector2.Down, Vector2.Left, Vector2.Right })
+                    Effects.BurstEffect.Spawn(this, GlobalPosition + side * 16, new Color(.8f, .4f, 1), 11, .18f);
+            else Effects.BurstEffect.Spawn(this, GlobalPosition + direction * 16,
+                new Color(1, 0.45f, 0.2f), 11, 0.18f);
 		}
 
 		// Wird von den Unterklassen ueberschrieben (Verfolgen, Abstand halten, etc.)

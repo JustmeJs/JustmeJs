@@ -61,6 +61,11 @@ layout_mode = 2
 custom_minimum_size = Vector2(260, 50)
 text = "Language: English"
 
+[node name="SettingsButton" type="Button" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(220, 50)
+text = "Settings"
+
 [node name="HelpLabel" type="Label" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
 horizontal_alignment = 1

@@ -111,7 +111,7 @@ func run() -> void:
  await frames()
  verify(current_scene.GetLanguageCode() == "en", "First launch defaults to English")
  verify(button(current_scene, "PlayButton").text == "Play", "Main menu starts in English")
- await menu_cycle(current_scene, ["PlayButton", "LanguageButton"])
+ await menu_cycle(current_scene, ["PlayButton", "LanguageButton", "SettingsButton"])
  await key(KEY_DOWN)
  await key(KEY_ENTER)
  verify(current_scene.GetLanguageCode() == "de", "Enter activates the language button")
@@ -150,7 +150,7 @@ func run() -> void:
    return
   verify(pause_menu.get_node(BOX + "TitleLabel").text == ("Paused" if language == "en" else "Pausiert"), "Pause title uses " + language)
   var old_position: Vector2 = player.position
-  await menu_cycle(pause_menu, ["ContinueButton", "RetryButton", "MenuButton"])
+  await menu_cycle(pause_menu, ["ContinueButton", "RetryButton", "MenuButton", "SettingsButton"])
   verify(player.position == old_position, "Navigating paused menus does not move gameplay")
   await key(KEY_SPACE)
   verify(not paused and not is_instance_valid(pause_menu), "Space resumes the paused game")

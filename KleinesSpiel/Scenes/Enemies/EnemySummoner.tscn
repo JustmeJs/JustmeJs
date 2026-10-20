@@ -28,4 +28,4 @@ Accent = Color(1, 0.4, 0.2, 1)
 sprite_frames = ExtResource("art")
 animation = &"idle"
 autoplay = "idle"
-scale = Vector2(0.18, 0.18)
+scale = Vector2(0.32, 0.32)

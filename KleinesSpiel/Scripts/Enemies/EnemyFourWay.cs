@@ -7,6 +7,8 @@ namespace KleinesSpiel.Scripts.Enemies
 	public partial class EnemyFourWay : Enemy
 	{
 		public bool BossPatterns;
+        [Export] public float ProjectileRange = 240f;
+        private float _radialFlash;
         [Export] public ulong AttackSeed;
         private readonly RandomNumberGenerator _attackRandom = new();
         private string _lastPattern = "Cross";
@@ -33,6 +35,8 @@ namespace KleinesSpiel.Scripts.Enemies
 
 		protected override void UpdateBehavior(float dt)
 		{
+            _radialFlash = Mathf.Max(0, _radialFlash - dt);
+            QueueRedraw();
 			_wanderChangeTimer -= dt;
 			if (_wanderChangeTimer <= 0f)
 			{
@@ -59,6 +63,7 @@ namespace KleinesSpiel.Scripts.Enemies
 				return;
 
 			AnimateAttack(GetDirectionToPlayer());
+            if (GetNode<Common.ActorAnimator>("Visual").RadialAttack) _radialFlash = 0.24f;
 
             int pattern = BossPatterns ? WardenPatterns.Choose(_attackRandom) : 0;
             _lastPattern = WardenPatterns.Name(pattern);
@@ -72,9 +77,20 @@ namespace KleinesSpiel.Scripts.Enemies
 
 				if (projectileInstance is Projectiles.Projectile projectile)
 				{
+                    if (!BossPatterns) projectile.MaxTravelDistance = ProjectileRange;
 					projectile.Launch(direction, ProjectileSpeed * ProjectileSpeedMultiplier, ProjectileDamage);
 				}
 			}
 		}
+        public override void _Draw()
+        {
+            if (_radialFlash <= 0 || CurrentHealth <= 0) return;
+            float progress = 1 - _radialFlash / 0.24f;
+            var color = new Color(0.85f, 0.5f, 1f, 1 - progress);
+            DrawArc(Vector2.Zero, 16 + progress * 15, 0, Mathf.Tau, 24, color, 2);
+            foreach (var direction in new[] { Vector2.Up, Vector2.Down, Vector2.Left, Vector2.Right })
+                DrawLine(direction * 12, direction * (25 + progress * 12), color, 3);
+        }
+
 	}
 }

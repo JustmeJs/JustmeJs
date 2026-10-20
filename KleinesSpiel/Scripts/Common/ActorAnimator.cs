@@ -7,6 +7,8 @@ namespace KleinesSpiel.Scripts.Common
     {
         [Export] public bool Floating;
         [Export] public bool MirrorLeft;
+        [Export] public bool HurtFlashOnly;
+        [Export] public bool RadialAttack;
         public bool ProceduralPose;
         private float _deathTime;
         [Export] public Color Accent = new Color(0.3f, 0.85f, 1f);
@@ -35,6 +37,7 @@ namespace KleinesSpiel.Scripts.Common
 
         private string ResolveAnimation(string state)
         {
+            if (state == "attack" && RadialAttack && _sprite.SpriteFrames.HasAnimation("attack_radial")) return "attack_radial";
             string direction = Mathf.Abs(_facing.X) > Mathf.Abs(_facing.Y)
                 ? (_facing.X < 0 ? "left" : "right") : (_facing.Y < 0 ? "up" : "down");
             string directionalName = $"{state}_{direction}";
@@ -54,7 +57,7 @@ namespace KleinesSpiel.Scripts.Common
             if (_dead) return;
             _attack = 0.24f;
             if (direction != Vector2.Zero) _facing = direction;
-            if (_sprite != null && _hurt <= 0f && _dash <= 0f)
+            if (_sprite != null && (_hurt <= 0f || HurtFlashOnly) && _dash <= 0f)
             {
                 _sprite.Play(ResolveAnimation("attack"));
                 _sprite.SetFrameAndProgress(0, 0);
@@ -65,7 +68,7 @@ namespace KleinesSpiel.Scripts.Common
         {
             if (_dead) return;
             _hurt = 0.17f;
-            Effects.BurstEffect.Spawn(this, GlobalPosition, new Color(1, 0.45f, 0.3f), 12, 0.22f);
+            if (!HurtFlashOnly) Effects.BurstEffect.Spawn(this, GlobalPosition, new Color(1, 0.45f, 0.3f), 12, 0.22f);
         }
 
         public void PlayDash(float duration)
@@ -93,7 +96,7 @@ namespace KleinesSpiel.Scripts.Common
             _attack = Mathf.Max(0, _attack - dt);
             _hurt = Mathf.Max(0, _hurt - dt);
             _dash = Mathf.Max(0, _dash - dt);
-            string state = _dead ? "death" : _hurt > 0 ? "hurt" : _dash > 0 ? "dash"
+            string state = _dead ? "death" : _hurt > 0 && !HurtFlashOnly ? "hurt" : _dash > 0 ? "dash"
                 : _attack > 0 ? "attack" : _motion.LengthSquared() > 25 ? "walk" : "idle";
             string animation = ResolveAnimation(state);
             if (_state != state || _sprite.Animation.ToString() != animation)
@@ -101,7 +104,7 @@ namespace KleinesSpiel.Scripts.Common
                 _state = state;
                 _sprite.Play(animation);
             }
-            if (_directional) _sprite.FlipH = MirrorLeft && Mathf.Abs(_facing.X) > Mathf.Abs(_facing.Y) && _facing.X < 0;
+            if (_directional) _sprite.FlipH = !(RadialAttack && state == "attack") && MirrorLeft && Mathf.Abs(_facing.X) > Mathf.Abs(_facing.Y) && _facing.X < 0;
             else if (Mathf.Abs(_facing.X) > 0.1f) _sprite.FlipH = _facing.X < 0;
             float bob = _dead ? 0 : Floating ? Mathf.Sin(_time * 4) * 2
                 : state == "walk" ? -Mathf.Abs(Mathf.Sin(_time * 14)) * 1.5f
@@ -111,7 +114,7 @@ namespace KleinesSpiel.Scripts.Common
                 : state == "hurt" ? Mathf.Sin(_time * 70) * 0.08f : 0;
             float stretch = state == "dash" ? 0.15f : state == "attack" ? -0.06f : 0;
             _sprite.Scale = _spriteScale * new Vector2(1 + stretch, 1 - stretch);
-            _sprite.SelfModulate = state == "hurt" ? new Color(2, 1.3f, 1.3f)
+            _sprite.SelfModulate = !_dead && HurtFlashOnly && _hurt > 0 ? new Color(1.8f, 0.2f, 0.2f) : state == "hurt" ? new Color(2, 1.3f, 1.3f)
                 : state == "dash" ? new Color(0.55f, 1.3f, 1.6f) : Colors.White;
             if (ProceduralPose)
             {

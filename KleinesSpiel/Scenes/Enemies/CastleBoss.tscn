@@ -27,6 +27,7 @@ shape = SubResource("body")
 modulate = Color(1, 0.84, 0.62, 1)
 script = ExtResource("animator")
 MirrorLeft = true
+HurtFlashOnly = true
 Accent = Color(1, 0.78, 0.25, 1)
 
 [node name="Sprite" type="AnimatedSprite2D" parent="Visual"]

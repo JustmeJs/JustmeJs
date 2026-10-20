@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://boss_ranged_scene"]
 
-[ext_resource type="Script" path="res://Scripts/Enemies/EnemyRanged.cs" id="1"]
+[ext_resource type="Script" path="res://Scripts/Enemies/BlinkArcherBoss.cs" id="1"]
 [ext_resource type="PackedScene" path="res://Scenes/Projectiles/EnemyProjectile.tscn" id="2"]
 
 [ext_resource type="SpriteFrames" path="res://Resources/Animations/Directions/crypt_archer.tres" id="art"]
@@ -29,6 +29,7 @@ shape = SubResource("RectangleShape2D_1")
 [node name="Visual" type="Node2D" parent="."]
 script = ExtResource("animator")
 MirrorLeft = true
+HurtFlashOnly = true
 Accent = Color(1, 0.4, 0.2, 1)
 
 [node name="Sprite" type="AnimatedSprite2D" parent="Visual"]

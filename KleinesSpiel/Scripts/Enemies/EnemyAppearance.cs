@@ -42,8 +42,11 @@ namespace KleinesSpiel.Scripts.Enemies
             }
             var sprite = enemy.GetNode<AnimatedSprite2D>("Visual/Sprite");
             sprite.SpriteFrames = frames;
-            sprite.Scale = Vector2.One * (boss ? 0.32f : zombie ? 0.16f : 0.18f);
-            enemy.GetNode<Common.ActorAnimator>("Visual").MirrorLeft = true;
+            sprite.Scale = Vector2.One * (boss ? 0.32f : enemy is EnemySummoner ? 0.32f : zombie ? 0.16f : 0.18f);
+            var animator = enemy.GetNode<Common.ActorAnimator>("Visual");
+            animator.MirrorLeft = true;
+            animator.HurtFlashOnly = boss;
+            animator.RadialAttack = role == "crypt_watcher";
         }
     }
 }

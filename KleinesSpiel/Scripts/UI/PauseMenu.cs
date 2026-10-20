@@ -15,7 +15,10 @@ namespace KleinesSpiel.Scripts.UI
 		public override void _Ready()
 		{
 			ProcessMode = ProcessModeEnum.Always;
-			MenuMotion.Configure(this);
+            var settings = GetNode<Button>("CenterContainer/VBoxContainer/SettingsButton");
+            settings.Text = Localization.Text("Settings", "Einstellungen");
+            settings.Pressed += () => SettingsMenu.Open(this, settings);
+            MenuMotion.Configure(this);
 
 			var continueButton = GetNode<Button>("CenterContainer/VBoxContainer/ContinueButton");
 			var retryButton = GetNode<Button>("CenterContainer/VBoxContainer/RetryButton");

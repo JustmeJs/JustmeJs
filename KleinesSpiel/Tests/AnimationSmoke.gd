@@ -93,7 +93,10 @@ func run() -> void:
   verify(animated.frame == 0, name + " repeated attack restarts from windup")
   enemy.TakeDamage(1)
   await frames(2)
-  verify(art.GetAnimationState() == "hurt", name + " hurt has priority over attack")
+  if name.begins_with("Boss"):
+   verify(art.GetAnimationState() != "hurt" and animated.self_modulate.r > animated.self_modulate.g * 2, name + " flashes red without hurt pose")
+  else:
+   verify(art.GetAnimationState() == "hurt", name + " hurt has priority over attack")
   enemy.TakeDamage(10000)
   await frames(2)
   verify(art.GetAnimationState() == "death", name + " death transition")

@@ -19,6 +19,8 @@ namespace KleinesSpiel.Scripts.Enemies
         private readonly RandomNumberGenerator _attackRandom = new();
         public override void _Ready() { base._Ready(); _attackRandom.Randomize(); }
 
+        protected void DelayNormalShot(float seconds) => _fireCooldownTimer = seconds;
+
 		protected override void UpdateBehavior(float dt)
 		{
 			float distance = GetDistanceToPlayer();
@@ -53,7 +55,7 @@ namespace KleinesSpiel.Scripts.Enemies
 			}
 		}
 
-		private void Shoot(Vector2 direction)
+		protected void Shoot(Vector2 direction)
 		{
 			if (ProjectileScene == null)
 				return;

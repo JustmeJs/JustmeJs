@@ -153,5 +153,6 @@ animations = [
 {"frames": [{"duration": 1.0, "texture": SubResource("f0_3")}, {"duration": 1.0, "texture": SubResource("f0_4")}], "loop": false, "name": &"attack", "speed": 9},
 {"frames": [{"duration": 1.0, "texture": SubResource("f0_0")}, {"duration": 1.0, "texture": SubResource("f0_3")}], "loop": false, "name": &"hurt", "speed": 10},
 {"frames": [{"duration": 1.0, "texture": SubResource("f0_0")}, {"duration": 1.0, "texture": SubResource("f0_5")}], "loop": false, "name": &"death", "speed": 6},
-{"frames": [{"duration": 1.0, "texture": SubResource("f0_1")}, {"duration": 1.0, "texture": SubResource("f0_2")}], "loop": true, "name": &"dash", "speed": 12}
+{"frames": [{"duration": 1.0, "texture": SubResource("f0_1")}, {"duration": 1.0, "texture": SubResource("f0_2")}], "loop": true, "name": &"dash", "speed": 12},
+{"frames": [{"duration": 1.0, "texture": SubResource("f0_3")}, {"duration": 1.0, "texture": SubResource("f0_0")}], "loop": false, "name": &"attack_radial", "speed": 9.0}
 ]

@@ -8,6 +8,8 @@ namespace KleinesSpiel.Scripts.UI
 		public override void _Ready()
 		{
 			Audio.GameAudio.Instance?.OnRunEnded();
+            var settings = GetNode<Button>("CenterContainer/VBoxContainer/SettingsButton");
+            settings.Pressed += () => SettingsMenu.Open(this, settings);
             MenuMotion.Configure(this);
 			var playButton = GetNode<Button>("CenterContainer/VBoxContainer/PlayButton");
 			playButton.Pressed += OnPlayPressed;
@@ -25,6 +27,7 @@ namespace KleinesSpiel.Scripts.UI
 
 		private void RefreshText()
 		{
+            GetNode<Button>("CenterContainer/VBoxContainer/SettingsButton").Text = Localization.Text("Settings", "Einstellungen");
 			GetNode<Button>("CenterContainer/VBoxContainer/PlayButton").Text = Localization.Text("Play", "Spielen");
 			GetNode<Button>("CenterContainer/VBoxContainer/LanguageButton").Text = Localization.Text("Language: English", "Sprache: Deutsch");
 			GetNode<Label>("CenterContainer/VBoxContainer/HelpLabel").Text = Localization.Text(

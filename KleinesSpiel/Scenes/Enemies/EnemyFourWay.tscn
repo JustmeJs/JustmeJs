@@ -24,6 +24,7 @@ shape = SubResource("RectangleShape2D_1")
 [node name="Visual" type="Node2D" parent="."]
 script = ExtResource("animator")
 MirrorLeft = true
+RadialAttack = true
 Floating = true
 Accent = Color(0.8, 0.3, 1, 1)
 

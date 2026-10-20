@@ -1,5 +1,16 @@
 # Magic Loop
 
+## Configuración de audio y ajustes de combate
+
+- **Settings / Einstellungen** en el menú principal y en pausa: música y efectos independientes de 0 a 100 %, con ratón o flechas. Se guardan en `user://settings.cfg` junto al idioma. Escape vuelve al menú de pausa sin reanudar la partida.
+- El ojo muestra una descarga frontal y radial, sin el haz lateral incrustado en el dibujo. Los proyectiles del enemigo normal que dispara en cruz recorren como máximo **240 píxeles**, independientemente de su velocidad.
+- Nuevas hojas de invocadores con márgenes transparentes; las regiones y los puntos de apoyo se ajustan por fotograma para evitar recortes y fragmentos vecinos.
+- El arquero jefe tiene una secuencia de **tres teletransportes y tres flechas**. Mantiene al menos **160 píxeles** respecto al jugador, comprueba espacio libre y línea de visión, avisa durante **0,55 s** al reaparecer y deja **0,4 s** tras cada disparo. Empieza disponible a los 7 s; tras usarlo descansa **10–13 s** y vuelve al ataque normal. Pausa y derrota interrumpen correctamente la secuencia.
+- Los jefes conservan su pose al recibir daño; solo muestran un destello rojo de **0,17 s**.
+
+El proyecto y el ZIP de esta versión incluyen estos cambios. Se han validado con 14 baterías de pruebas automatizadas, incluida la seguridad de los teletransportes en seis diseños de sala.
+
+
 ## Magic Loop: animaciones, música y equilibrio
 
 - Vara: un disparo cada **0,48 s** (antes 0,4) y **220 píxeles de alcance**, algo menos de media sala. Las mejoras de velocidad no amplían ese alcance.

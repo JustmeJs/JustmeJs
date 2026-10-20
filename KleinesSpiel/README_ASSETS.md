@@ -1,5 +1,16 @@
 # Magic Loop — juego, assets y validación
 
+## Configuración de audio y ajustes de combate
+
+- **Settings / Einstellungen** en el menú principal y en pausa: música y efectos independientes de 0 a 100 %, con ratón o flechas. Se guardan en `user://settings.cfg` junto al idioma. Escape vuelve al menú de pausa sin reanudar la partida.
+- El ojo muestra una descarga frontal y radial, sin el haz lateral incrustado en el dibujo. Los proyectiles del enemigo normal que dispara en cruz recorren como máximo **240 píxeles**, independientemente de su velocidad.
+- Nuevas hojas de invocadores con márgenes transparentes; las regiones y los puntos de apoyo se ajustan por fotograma para evitar recortes y fragmentos vecinos.
+- El arquero jefe tiene una secuencia de **tres teletransportes y tres flechas**. Mantiene al menos **160 píxeles** respecto al jugador, comprueba espacio libre y línea de visión, avisa durante **0,55 s** al reaparecer y deja **0,4 s** tras cada disparo. Empieza disponible a los 7 s; tras usarlo descansa **10–13 s** y vuelve al ataque normal. Pausa y derrota interrumpen correctamente la secuencia.
+- Los jefes conservan su pose al recibir daño; solo muestran un destello rojo de **0,17 s**.
+
+El proyecto y el ZIP de esta versión incluyen estos cambios. Se han validado con 14 baterías de pruebas automatizadas, incluida la seguridad de los teletransportes en seis diseños de sala.
+
+
 ## Magic Loop: animaciones, música y equilibrio
 
 - Vara: un disparo cada **0,48 s** (antes 0,4) y **220 píxeles de alcance**, algo menos de media sala. Las mejoras de velocidad no amplían ese alcance.
@@ -179,3 +190,5 @@ Desde la raíz del repositorio, `python3 Tools/audit_assets.py` comprueba refere
 Las pruebas de progresión y las vistas previas usan derrotas controladas, protección del jugador y fondos de prueba para las compras; no equivalen a una partida completa ganada sin asistencia.
 
 La batería `MagicLoopSmoke.gd` comprueba 300 repartos musicales sin repetición, cadencia real con teclado, alcance a tres velocidades, sonido al recoger monedas, gemidos de zombis vivos, poses direccionales y decisiones del Regent en seis semillas. Los nombres internos del proyecto C# se conservan por compatibilidad; el título, carpeta distribuida y archivo ZIP se llaman Magic Loop.
+
+Pruebas adicionales: `Tests/LocalAdjustmentsSmoke.gd` (audio persistente, teclado, pausa, alcance y secuencia del arquero) y `Tests/BlinkSafetySmoke.gd` (destinos de teletransporte en las seis distribuciones con colisiones reales).

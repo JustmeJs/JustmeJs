@@ -24,13 +24,48 @@ namespace KleinesSpiel.Scripts.Audio
         {
             Instance = this;
             ProcessMode = ProcessModeEnum.Always;
-            _music = new AudioStreamPlayer { Name = "Music", VolumeDb = -15 };
+            EnsureBus("Music"); EnsureBus("Effects");
+            var settings = new ConfigFile();
+            settings.Load(Common.Localization.SettingsPath);
+            SetVolume("Music", (float)settings.GetValue("audio", "music", 1.0).AsDouble(), false);
+            SetVolume("Effects", (float)settings.GetValue("audio", "effects", 1.0).AsDouble(), false);
+            _music = new AudioStreamPlayer { Name = "Music", Bus = "Music", VolumeDb = -15 };
             AddChild(_music);
             for (int i = 0; i < 8; i++)
             {
-                var voice = new AudioStreamPlayer { Name = $"Effect{i}", VolumeDb = -16 };
+                var voice = new AudioStreamPlayer { Name = $"Effect{i}", Bus = "Effects", VolumeDb = -16 };
                 AddChild(voice); _voices.Add(voice);
             }
+        }
+        private static void EnsureBus(string name)
+        {
+            if (AudioServer.GetBusIndex(name) >= 0) return;
+            AudioServer.AddBus();
+            int index = AudioServer.BusCount - 1;
+            AudioServer.SetBusName(index, name);
+            AudioServer.SetBusSend(index, "Master");
+        }
+        public float GetMusicVolume() => GetVolume("Music");
+        public float GetEffectsVolume() => GetVolume("Effects");
+        private static float GetVolume(string bus)
+        {
+            int index = AudioServer.GetBusIndex(bus);
+            return AudioServer.IsBusMute(index) ? 0 : Mathf.DbToLinear(AudioServer.GetBusVolumeDb(index));
+        }
+        public void SetMusicVolume(float value) => SetVolume("Music", value, true);
+        public void SetEffectsVolume(float value) => SetVolume("Effects", value, true);
+        private static void SetVolume(string bus, float value, bool save)
+        {
+            value = float.IsFinite(value) ? Mathf.Clamp(value, 0, 1) : 1;
+            int index = AudioServer.GetBusIndex(bus);
+            AudioServer.SetBusMute(index, value <= 0);
+            AudioServer.SetBusVolumeDb(index, value <= 0 ? -80 : Mathf.LinearToDb(value));
+            if (!save) return;
+            var settings = new ConfigFile();
+            settings.Load(Common.Localization.SettingsPath);
+            settings.SetValue("audio", bus == "Music" ? "music" : "effects", value);
+            var result = settings.Save(Common.Localization.SettingsPath);
+            if (result != Error.Ok) GD.PushWarning($"Could not save audio settings: {result}");
         }
         public override void _Process(double delta)
         {
